@@ -1,7 +1,14 @@
-package repository
+package repositories
 
 import (
+	"fmt"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
+	"github.com/sirupsen/logrus"
+)
+
+const (
+	usersTable = "users"
 )
 
 type Config struct {
@@ -13,7 +20,7 @@ type Config struct {
 	SSLMode  string
 }
 
-func NewPostgresDB(cfg Config) (*sqlx.DB, error)
+func NewPostgresDB(cfg Config) (*sqlx.DB, error) {
 
 	db, err := sqlx.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",
 		cfg.Host, cfg.Port, cfg.Username, cfg.DBName, cfg.Password, cfg.SSLMode))
@@ -26,6 +33,6 @@ func NewPostgresDB(cfg Config) (*sqlx.DB, error)
 		return nil, err
 	}
 
-	logrus.Info("new db created")
+	logrus.Info("new connection to db has been established")
 	return db, nil
 }

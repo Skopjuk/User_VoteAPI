@@ -1,7 +1,7 @@
 package user
 
 import (
-	"usersAPI/models"
+	"userapi/models"
 )
 
 type InsertUser interface {

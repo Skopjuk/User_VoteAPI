@@ -2,7 +2,7 @@ package user
 
 import (
 	"bytes"
-	"usersAPI/models"
+	"userapi/models"
 )
 
 type Authenticate struct {

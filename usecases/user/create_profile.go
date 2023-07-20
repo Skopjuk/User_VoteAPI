@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
-	"usersAPI/models"
+	"userapi/models"
 )
 
 type CreateProfile struct {

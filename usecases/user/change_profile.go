@@ -2,7 +2,7 @@ package user
 
 import (
 	"fmt"
-	"usersAPI/models"
+	"userapi/models"
 )
 
 //позбувитись від бібліотеки errors на користь fmt.Errorf
