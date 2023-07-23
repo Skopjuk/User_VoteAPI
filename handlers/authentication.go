@@ -3,7 +3,6 @@ package handlers
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"net/http"
 	"userapi/repositories"
 	"userapi/usecases/user"
@@ -17,38 +16,20 @@ type SignUpParams struct {
 }
 
 func (h *Handler) SignUp(c echo.Context) error {
-	var input *SignUpParams
+	var input SignUpParams
 
 	log := logrus.WithFields(
 		logrus.Fields{
 			"endpoint": "sign-up",
 		})
 
-	db, err := repositories.NewPostgresDB(repositories.Config{
-		Host:     viper.GetString("db.host"),
-		Port:     viper.GetString("db.port"),
-		Username: viper.GetString("db.username"),
-		Password: viper.GetString("db.password"),
-		DBName:   viper.GetString("db.dbname"),
-		SSLMode:  viper.GetString("db.sslmode"),
-	})
-	if err != nil {
-		log.Errorf("cannot connect to db: %s", err.Error())
-		return err
-	}
-
 	if err := c.Bind(&input); err != nil {
 		logrus.Error("failed to bind req body: %s", err.Error())
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	usersRepository := repositories.NewUsersRepository(db)
+	usersRepository := repositories.NewUsersRepository(h.db)
 	newProfile := user.NewCreateProfile(usersRepository)
-	err = c.Bind(&input)
-	if err != nil {
-		log.Errorf("cannot parse query: %s", err.Error())
-		return err
-	}
 
 	params := user.NewUserAttributes{
 		Username:  input.Username,
@@ -56,12 +37,20 @@ func (h *Handler) SignUp(c echo.Context) error {
 		LastName:  input.LastName,
 		Password:  input.Password,
 	}
-	err = newProfile.Execute(params)
+	id, err := newProfile.Execute(params)
 	if err != nil {
-		log.Error("cannot execute usecase: %s", err.Error())
+		log.Errorf("cannot execute usecase: %s", err.Error())
+	}
+
+	err = c.JSON(http.StatusOK, map[string]interface{}{
+		"id": id,
+	})
+	if err != nil {
+		logrus.Error(err)
 		return err
 	}
-	return nil
+
+	return err
 }
 
 func (h *Handler) SignIn(c echo.Context) error {

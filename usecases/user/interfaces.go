@@ -5,7 +5,7 @@ import (
 )
 
 type InsertUser interface {
-	InsertUser(user *models.User) error
+	InsertUser(user models.User) (id int, err error)
 }
 
 type FindUserByUsername interface {

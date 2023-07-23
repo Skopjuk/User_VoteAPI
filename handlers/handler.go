@@ -1,16 +1,21 @@
 package handlers
 
 import (
+	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 )
 
 type Handler struct {
+	db      *sqlx.DB
 	logging *logrus.Logger
 }
 
-func NewHandler(logging *logrus.Logger) *Handler {
-	return &Handler{logging: logging}
+func NewHandler(logging *logrus.Logger, db *sqlx.DB) *Handler {
+	return &Handler{
+		logging: logging,
+		db:      db,
+	}
 }
 
 func (h *Handler) InitRoutes() *echo.Echo {
