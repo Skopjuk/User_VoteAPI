@@ -9,7 +9,7 @@ type InsertUser interface {
 }
 
 type FindUserByUsername interface {
-	FindUserByUsername(username string) (*models.User, error)
+	FindUserByUsername(username string) (models.User, error)
 }
 
 type DeleteUser interface {
@@ -17,7 +17,7 @@ type DeleteUser interface {
 }
 
 type UpdateUser interface {
-	UpdateUser(user *models.User) error
+	UpdateUser(user models.User) error
 }
 
 type AuthenticateUser interface {
@@ -26,4 +26,8 @@ type AuthenticateUser interface {
 
 type ChangeUsersPassword interface {
 	ChangeUsersPassword(username string, password string) bool
+}
+
+type GetAll interface {
+	GetAll() (usersList []models.User, err error)
 }

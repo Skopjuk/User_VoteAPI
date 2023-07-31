@@ -1,7 +1,8 @@
 package user
 
 import (
-	"bytes"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/crypto/bcrypt"
 	"userapi/models"
 )
 
@@ -19,14 +20,17 @@ type AuthenticateAttributes struct {
 }
 
 func (a *Authenticate) Execute(attributes AuthenticateAttributes) (*models.User, error) {
+	logrus.Infof("user with username %s try to authenticate", attributes.Username)
 	user, err := a.repository.FindUserByUsername(attributes.Username)
+	if err != nil {
+		logrus.Error("can not execute usecase: ", err)
+		return nil, err
+	}
+
+	err = bcrypt.CompareHashAndPassword(user.Password, []byte(attributes.Password))
 	if err != nil {
 		return nil, err
 	}
 
-	if bytes.Compare(user.Password, PasswordHashing(attributes.Password)) == 0 {
-		return user, nil
-	}
-
-	return user, nil
+	return &user, nil
 }

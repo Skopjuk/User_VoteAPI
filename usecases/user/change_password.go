@@ -2,6 +2,7 @@ package user
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 )
 
 type ChangePassword struct {
@@ -21,6 +22,7 @@ type ChangePasswordAttributes struct {
 func (a *ChangePassword) Execute(attributes ChangePasswordAttributes) (bool, error) {
 	authenticated := a.repository.AuthenticateUser(attributes.Username, attributes.Password)
 	if !authenticated {
+		logrus.Error("user is not authenticated")
 		return false, fmt.Errorf("user is not authenticated")
 	}
 

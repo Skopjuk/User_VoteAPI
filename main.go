@@ -10,6 +10,7 @@ import (
 
 func main() {
 	logging := logrus.New()
+	logging.SetReportCaller(true)
 	logging.Info("create router")
 
 	if err := InitConfig(); err != nil {

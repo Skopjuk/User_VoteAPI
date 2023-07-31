@@ -3,12 +3,12 @@ package models
 import "time"
 
 type User struct {
-	Id        int
-	Username  string
-	FirstName string
-	LastName  string
-	Password  []byte
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt time.Time
+	Id        int        `db:"id"`
+	Username  string     `db:"username"`
+	FirstName string     `db:"first_name"`
+	LastName  string     `db:"last_name"`
+	Password  []byte     `db:"password"`
+	CreatedAt time.Time  `db:"created_at"`
+	UpdatedAt time.Time  `db:"updated_at"`
+	DeletedAt *time.Time `db:"deleted_at"`
 }
