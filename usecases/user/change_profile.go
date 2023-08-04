@@ -8,11 +8,12 @@ import (
 //позбувитись від бібліотеки errors на користь fmt.Errorf
 
 type ChangeProfile struct {
-	repository UpdateUser
+	updateUser  UpdateUser
+	getUserById GetUserById
 }
 
-func NewChangeProfile(repository UpdateUser) *ChangeProfile {
-	return &ChangeProfile{repository: repository}
+func NewChangeProfile(updateUser UpdateUser) *ChangeProfile {
+	return &ChangeProfile{updateUser: updateUser}
 }
 
 type UpdateUserAttributes struct {
@@ -21,7 +22,8 @@ type UpdateUserAttributes struct {
 	LastName  string
 }
 
-func (c *ChangeProfile) Execute(attributes UpdateUserAttributes) error {
+func (c *ChangeProfile) Execute(attributes UpdateUserAttributes, id int) error {
+
 	if len(attributes.FirstName) < 2 {
 		return fmt.Errorf("first name is too short")
 	} else if len(attributes.FirstName) > 50 {
@@ -36,9 +38,9 @@ func (c *ChangeProfile) Execute(attributes UpdateUserAttributes) error {
 		return fmt.Errorf("username is too long")
 	}
 
-	return c.repository.UpdateUser(models.User{
+	return c.updateUser.UpdateUser(models.User{
 		Username:  attributes.Username,
 		FirstName: attributes.FirstName,
 		LastName:  attributes.LastName,
-	})
+	}, id)
 }

@@ -36,8 +36,8 @@ func (h *Handler) InitRoutes() *echo.Echo {
 		auth.POST("/sign-in", h.SignIn)
 		{
 			api.GET("/all_users", h.GetAll)
-			api.PATCH("/:id", h.UpdateUser)
-
+			api.PUT("/:id", h.UpdateUser)
+			api.GET("/:id", h.GetUserById)
 		}
 	}
 

@@ -17,7 +17,7 @@ type DeleteUser interface {
 }
 
 type UpdateUser interface {
-	UpdateUser(user models.User) error
+	UpdateUser(user models.User, id int) error
 }
 
 type AuthenticateUser interface {
@@ -30,4 +30,8 @@ type ChangeUsersPassword interface {
 
 type GetAll interface {
 	GetAll() (usersList []models.User, err error)
+}
+
+type GetUserById interface {
+	GetUserById(id int) (user models.User, err error)
 }

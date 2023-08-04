@@ -3,10 +3,14 @@ module userapi
 go 1.18
 
 require (
+	github.com/astaxie/beego v1.12.3
+	github.com/flosch/pongo2 v0.0.0-20200913210552-0d938eb266f3
 	github.com/jmoiron/sqlx v1.3.5
+	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/echo/v4 v4.11.1
 	github.com/labstack/gommon v0.4.0
 	github.com/lib/pq v1.2.0
+	github.com/siredwin/pongorenderer v0.0.0-20180101092958-650887b66983
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.16.0
 	golang.org/x/crypto v0.11.0
@@ -33,5 +37,6 @@ require (
 	golang.org/x/text v0.11.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
+	gopkg.in/yaml.v2 v2.2.8 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

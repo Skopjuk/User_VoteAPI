@@ -36,9 +36,9 @@ func (u *UsersRepository) FindUserByUsername(username string) (user models.User,
 	return user, err
 }
 
-func (u *UsersRepository) UpdateUser(user models.User) error {
-	query := "UPDATE users SET username=$1, first_name=$3, last_name=$4 values ($1, $2, $3, $4)"
-	_, err := u.db.Query(query, user.Username, user.FirstName, user.LastName)
+func (u *UsersRepository) UpdateUser(user models.User, id int) error {
+	query := "UPDATE users SET username=$1, first_name=$2, last_name=$3 WHERE id=$4"
+	_, err := u.db.Query(query, user.Username, user.FirstName, user.LastName, id)
 	if err != nil {
 		logrus.Errorf("query problem: %s", err)
 	}
@@ -55,4 +55,14 @@ func (u *UsersRepository) GetAll() (usersList []models.User, err error) {
 	}
 
 	return usersList, err
+}
+
+func (u *UsersRepository) GetUserById(id int) (user models.User, err error) {
+	query := "SELECT * FROM users WHERE id=$1"
+	err = u.db.Get(&user, query, id)
+	if err != nil {
+		logrus.Errorf("user with id %s wasn't found, with error: %s", id, err)
+	}
+
+	return user, err
 }
