@@ -25,7 +25,7 @@ type AuthenticateUser interface {
 }
 
 type ChangeUsersPassword interface {
-	ChangeUsersPassword(username string, password string) bool
+	ChangeUsersPassword(id int, password string) error
 }
 
 type GetAll interface {

@@ -1,30 +1,24 @@
 package user
 
-import (
-	"fmt"
-	"github.com/sirupsen/logrus"
-)
-
 type ChangePassword struct {
-	repository          AuthenticateUser
-	changeUsersPassword ChangeUsersPassword
+	//	repository          AuthenticateUser
+	repository ChangeUsersPassword
 }
 
-func NewChangePassword() *ChangePassword {
-	return &ChangePassword{}
+func NewChangePassword(repository ChangeUsersPassword) *ChangePassword {
+	return &ChangePassword{repository: repository}
 }
 
 type ChangePasswordAttributes struct {
-	Username string
 	Password string
 }
 
-func (a *ChangePassword) Execute(attributes ChangePasswordAttributes) (bool, error) {
-	authenticated := a.repository.AuthenticateUser(attributes.Username, attributes.Password)
-	if !authenticated {
-		logrus.Error("user is not authenticated")
-		return false, fmt.Errorf("user is not authenticated")
-	}
+func (a *ChangePassword) Execute(id int, attributes ChangePasswordAttributes) error {
+	//authenticated := a.repository.AuthenticateUser(attributes.Username, attributes.Password)
+	//if !authenticated {
+	//	logrus.Error("user is not authenticated")
+	//	return false, fmt.Errorf("user is not authenticated")
+	//}
 
-	return a.changeUsersPassword.ChangeUsersPassword(attributes.Username, attributes.Password), nil
+	return a.repository.ChangeUsersPassword(id, string(PasswordHashing(attributes.Password)))
 }

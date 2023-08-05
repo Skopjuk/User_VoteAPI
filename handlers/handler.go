@@ -24,20 +24,23 @@ func (h *Handler) InitRoutes() *echo.Echo {
 
 	auth := router.Group("/auth")
 	api := router.Group("/api")
+	user := router.Group("/user")
 	api.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
 		if username == "joe" && password == "secret" {
 			return true, nil
 		}
 		return false, nil
 	}))
-
 	{
-		auth.POST("/sign-up", h.SignUp)
-		auth.POST("/sign-in", h.SignIn)
+		user.GET("/all_users", h.GetAll)
+		user.PUT("/:id", h.UpdateUser)
+		user.GET("/:id", h.GetUserById)
 		{
-			api.GET("/all_users", h.GetAll)
-			api.PUT("/:id", h.UpdateUser)
-			api.GET("/:id", h.GetUserById)
+			auth.POST("/sign-up", h.SignUp)
+			auth.POST("/sign-in", h.SignIn)
+		}
+		{
+			api.PUT("/:id", h.ChangePassword)
 		}
 	}
 

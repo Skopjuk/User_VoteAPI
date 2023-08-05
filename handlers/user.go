@@ -22,16 +22,15 @@ type GetAllUsersParams struct {
 	LastName  string `json:"last_name,omitempty"`
 }
 
+type UpdatePasswordParams struct {
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+}
+
 func (h *Handler) UpdateUser(c echo.Context) error {
 	var input UpdateUserParams
-	id := c.Param("id")
-	logrus.Infof("try to get user with id %s", id)
 
-	idInt, err := strconv.Atoi(id)
-	if err != nil {
-		logrus.Errorf("error of converting id to int. id: %s", id)
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
+	idInt := GetUsersId(c)
 
 	if err := c.Bind(&input); err != nil {
 		h.logging.Errorf("failedd to bind req body: %s", err)
@@ -46,7 +45,7 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 
 	usersRepository := repositories.NewUsersRepository(h.db)
 	newUpdateProfile := user.NewChangeProfile(usersRepository)
-	err = newUpdateProfile.Execute(params, idInt)
+	err := newUpdateProfile.Execute(params, idInt)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
 		c.JSON(http.StatusInternalServerError, err)
@@ -81,17 +80,10 @@ func (h *Handler) GetAll(c echo.Context) error {
 }
 
 func (h *Handler) GetUserById(c echo.Context) error {
-	id := c.Param("id")
-	logrus.Infof("try to get user with id %s", id)
-
-	idInt, err := strconv.Atoi(id)
-	if err != nil {
-		logrus.Errorf("error of converting id to int. id: %s", id)
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
+	idInt := GetUsersId(c)
 
 	bindedUser := models.User{}
-	err = c.Bind(&bindedUser)
+	err := c.Bind(&bindedUser)
 	if err != nil {
 		logrus.Error("error of binding json")
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -114,14 +106,49 @@ func (h *Handler) GetUserById(c echo.Context) error {
 	}
 
 	return err
-
 }
 
-func NewSlice(start, count, step int) []int {
-	s := make([]int, count)
-	for i := range s {
-		s[i] = start
-		start += step
+func (h *Handler) ChangePassword(c echo.Context) error {
+	var input UpdatePasswordParams
+	idInt := GetUsersId(c)
+
+	if err := c.Bind(&input); err != nil {
+		h.logging.Errorf("failedd to bind req body: %s", err)
+		return c.JSON(http.StatusBadRequest, err)
 	}
-	return s
+
+	params := user.ChangePasswordAttributes{
+		Password: input.Password,
+	}
+
+	usersRepository := repositories.NewUsersRepository(h.db)
+	newChangePassword := user.NewChangePassword(usersRepository)
+	err := newChangePassword.Execute(idInt, params)
+	if err != nil {
+		logrus.Errorf("can not execute usecase: %s", err)
+		c.JSON(http.StatusInternalServerError, err)
+		return err
+	}
+	err = c.JSON(http.StatusOK, map[string]interface{}{
+		"status_password_changing": "changed",
+	})
+	if err != nil {
+		logrus.Errorf("troubles with sending http status: %s", err)
+	}
+
+	return err
+}
+
+func GetUsersId(c echo.Context) int {
+	id := c.Param("id")
+	logrus.Infof("try to get user with id %s", id)
+
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		logrus.Errorf("error of converting id to int. id: %s", id)
+		c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return idInt
+
 }

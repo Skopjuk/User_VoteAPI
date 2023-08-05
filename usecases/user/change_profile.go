@@ -23,7 +23,7 @@ type UpdateUserAttributes struct {
 }
 
 func (c *ChangeProfile) Execute(attributes UpdateUserAttributes, id int) error {
-
+	//винести перевірки в окрему функцію
 	if len(attributes.FirstName) < 2 {
 		return fmt.Errorf("first name is too short")
 	} else if len(attributes.FirstName) > 50 {

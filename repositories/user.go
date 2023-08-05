@@ -66,3 +66,13 @@ func (u *UsersRepository) GetUserById(id int) (user models.User, err error) {
 
 	return user, err
 }
+
+func (u *UsersRepository) ChangeUsersPassword(id int, password string) error {
+	query := "UPDATE users SET password=$1 WHERE id=$2"
+	_, err := u.db.Query(query, password, id)
+	if err != nil {
+		logrus.Errorf("query for deleting password can not execute")
+	}
+
+	return err
+}
