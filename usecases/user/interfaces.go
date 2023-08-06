@@ -29,9 +29,13 @@ type ChangeUsersPassword interface {
 }
 
 type GetAll interface {
-	GetAll() (usersList []models.User, err error)
+	GetAll(skip string) (usersList []models.User, err error)
 }
 
 type GetUserById interface {
 	GetUserById(id int) (user models.User, err error)
+}
+
+type CountUsers interface {
+	CountUsers() (numberOfUsers int, err error)
 }

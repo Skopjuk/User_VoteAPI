@@ -35,6 +35,7 @@ func (h *Handler) InitRoutes() *echo.Echo {
 		user.GET("/all_users", h.GetAll)
 		user.PUT("/:id", h.UpdateUser)
 		user.GET("/:id", h.GetUserById)
+		user.GET("/count_users", h.GerNumberOfUsers)
 		{
 			auth.POST("/sign-up", h.SignUp)
 			auth.POST("/sign-in", h.SignIn)

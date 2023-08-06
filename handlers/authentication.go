@@ -4,6 +4,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	"strings"
 	"userapi/repositories"
 	"userapi/usecases/user"
 )
@@ -45,6 +46,17 @@ func (h *Handler) SignUp(c echo.Context) error {
 	id, err := newProfile.Execute(params)
 	if err != nil {
 		log.Errorf("cannot execute usecase: %s", err.Error())
+		if strings.Contains(err.Error(), "duplicate key value") {
+			c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"error": "this user already exist",
+			})
+		} else {
+			c.JSON(http.StatusBadRequest, map[string]interface{}{
+				"error": err.Error(),
+			})
+		}
+
+		return err
 	}
 
 	err = c.JSON(http.StatusOK, map[string]interface{}{

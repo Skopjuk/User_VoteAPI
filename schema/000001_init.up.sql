@@ -7,5 +7,7 @@ CREATE TABLE IF NOT EXISTS users
     password   varchar (255) not null,
     created_at timestamp not null default current_timestamp,
     deleted_at timestamp,
-    updated_at timestamp not null default current_timestamp
+    updated_at timestamp not null default current_timestamp,
+    constraint users_username_idx unique
+        (username)
   );

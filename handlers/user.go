@@ -62,11 +62,24 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 	return err
 }
 
+type QueryResult struct {
+	skip  string
+	limit string
+}
+
 func (h *Handler) GetAll(c echo.Context) error {
+	q := c.Request().URL.Query()
+	page, err := strconv.Atoi(q["page"][0])
+	if err != nil {
+		logrus.Errorf("error while converting page number to int: %s", err)
+		return err
+	}
+
+	skip := strconv.Itoa((page - 1) * 10)
 	usersRepository := repositories.NewUsersRepository(h.db)
 
 	newGetUsers := user.NewGetAllUsers(usersRepository)
-	users, err := newGetUsers.Execute()
+	users, err := newGetUsers.Execute(skip)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
 		c.JSON(http.StatusInternalServerError, map[string]interface{}{})
@@ -100,6 +113,26 @@ func (h *Handler) GetUserById(c echo.Context) error {
 
 	err = c.JSON(http.StatusOK, map[string]interface{}{
 		"user": user,
+	})
+	if err != nil {
+		logrus.Errorf("troubles with sending http status: %s", err)
+	}
+
+	return err
+}
+
+func (h *Handler) GerNumberOfUsers(c echo.Context) error {
+	usersRepository := repositories.NewUsersRepository(h.db)
+	newGetUserById := user.NewCountAllUsers(usersRepository)
+	numOfUsers, err := newGetUserById.Execute()
+	if err != nil {
+		logrus.Errorf("can not execute usecase: %s", err)
+		c.JSON(http.StatusInternalServerError, err)
+		return err
+	}
+
+	err = c.JSON(http.StatusOK, map[string]interface{}{
+		"number_of_users": numOfUsers,
 	})
 	if err != nil {
 		logrus.Errorf("troubles with sending http status: %s", err)
@@ -150,5 +183,4 @@ func GetUsersId(c echo.Context) int {
 	}
 
 	return idInt
-
 }

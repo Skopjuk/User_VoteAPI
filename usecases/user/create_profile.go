@@ -27,6 +27,7 @@ func (c *CreateProfile) Execute(attributes NewUserAttributes) (id int, err error
 	err = parametersValidation(attributes)
 	if err != nil {
 		logrus.Errorf("error while creating user: %s", err)
+		return 0, err
 	}
 
 	id, err = c.repository.InsertUser(models.User{
