@@ -39,3 +39,7 @@ type GetUserById interface {
 type CountUsers interface {
 	CountUsers() (numberOfUsers int, err error)
 }
+
+type CheckIfUserExists interface {
+	CheckIfUserExist(id int) error
+}

@@ -71,7 +71,6 @@ func (h *Handler) SignUp(c echo.Context) error {
 
 func (h *Handler) SignIn(c echo.Context) error {
 	var input SignInParams
-	logrus.Infof("user %s tries to authenticate", input)
 
 	if err := c.Bind(&input); err != nil {
 		h.logging.Errorf("failed to bind req body: %s", err)

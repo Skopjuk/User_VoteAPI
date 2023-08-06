@@ -1,12 +1,12 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
 	"userapi/models"
-	"userapi/repositories"
 	"userapi/usecases/user"
 )
 
@@ -43,9 +43,18 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 		LastName:  input.LastName,
 	}
 
-	usersRepository := repositories.NewUsersRepository(h.db)
-	newUpdateProfile := user.NewChangeProfile(usersRepository)
-	err := newUpdateProfile.Execute(params, idInt)
+	newGetUserById := user.NewGetUserByID(h.router)
+	_, err := newGetUserById.Execute(idInt)
+	if err != nil {
+		logrus.Errorf("user with id %d wasn't find", idInt)
+		c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": fmt.Sprintf("user with id %d wasn't find", idInt),
+		})
+		return err
+	}
+
+	newUpdateProfile := user.NewChangeProfile(h.router)
+	err = newUpdateProfile.Execute(params, idInt)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
 		c.JSON(http.StatusInternalServerError, err)
@@ -76,9 +85,8 @@ func (h *Handler) GetAll(c echo.Context) error {
 	}
 
 	skip := strconv.Itoa((page - 1) * 10)
-	usersRepository := repositories.NewUsersRepository(h.db)
 
-	newGetUsers := user.NewGetAllUsers(usersRepository)
+	newGetUsers := user.NewGetAllUsers(h.router)
 	users, err := newGetUsers.Execute(skip)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
@@ -102,8 +110,7 @@ func (h *Handler) GetUserById(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	usersRepository := repositories.NewUsersRepository(h.db)
-	newGetUserById := user.NewGetUserByID(usersRepository)
+	newGetUserById := user.NewGetUserByID(h.router)
 	user, err := newGetUserById.Execute(idInt)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
@@ -122,8 +129,7 @@ func (h *Handler) GetUserById(c echo.Context) error {
 }
 
 func (h *Handler) GerNumberOfUsers(c echo.Context) error {
-	usersRepository := repositories.NewUsersRepository(h.db)
-	newGetUserById := user.NewCountAllUsers(usersRepository)
+	newGetUserById := user.NewCountAllUsers(h.router)
 	numOfUsers, err := newGetUserById.Execute()
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
@@ -145,6 +151,16 @@ func (h *Handler) ChangePassword(c echo.Context) error {
 	var input UpdatePasswordParams
 	idInt := GetUsersId(c)
 
+	newGetUserById := user.NewGetUserByID(h.router)
+	_, err := newGetUserById.Execute(idInt)
+	if err != nil {
+		logrus.Errorf("user with id %d wasn't find", idInt)
+		c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": fmt.Sprintf("user with id %d wasn't find", idInt),
+		})
+		return err
+	}
+
 	if err := c.Bind(&input); err != nil {
 		h.logging.Errorf("failedd to bind req body: %s", err)
 		return c.JSON(http.StatusBadRequest, err)
@@ -154,9 +170,8 @@ func (h *Handler) ChangePassword(c echo.Context) error {
 		Password: input.Password,
 	}
 
-	usersRepository := repositories.NewUsersRepository(h.db)
-	newChangePassword := user.NewChangePassword(usersRepository)
-	err := newChangePassword.Execute(idInt, params)
+	newChangePassword := user.NewChangePassword(h.router)
+	err = newChangePassword.Execute(idInt, params)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
 		c.JSON(http.StatusInternalServerError, err)

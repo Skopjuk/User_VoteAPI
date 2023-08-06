@@ -1,5 +1,7 @@
 package user
 
+import "fmt"
+
 type ChangePassword struct {
 	//	repository          AuthenticateUser
 	repository ChangeUsersPassword
@@ -14,11 +16,19 @@ type ChangePasswordAttributes struct {
 }
 
 func (a *ChangePassword) Execute(id int, attributes ChangePasswordAttributes) error {
-	//authenticated := a.repository.AuthenticateUser(attributes.Username, attributes.Password)
-	//if !authenticated {
-	//	logrus.Error("user is not authenticated")
-	//	return false, fmt.Errorf("user is not authenticated")
-	//}
+	if err := validatePassword(attributes); err != nil {
+		return err
+	}
 
 	return a.repository.ChangeUsersPassword(id, string(PasswordHashing(attributes.Password)))
+}
+
+func validatePassword(attributes ChangePasswordAttributes) error {
+	if len(attributes.Password) < 6 {
+		return fmt.Errorf("password is too short")
+	} else if len(attributes.Password) > 100 {
+		return fmt.Errorf("password is too long")
+	}
+
+	return nil
 }
