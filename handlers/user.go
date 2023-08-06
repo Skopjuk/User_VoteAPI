@@ -28,19 +28,13 @@ type UpdatePasswordParams struct {
 }
 
 func (h *Handler) UpdateUser(c echo.Context) error {
-	var input UpdateUserParams
+	var input user.UpdateUserAttributes
 
 	idInt := GetUsersId(c)
 
 	if err := c.Bind(&input); err != nil {
 		h.logging.Errorf("failedd to bind req body: %s", err)
 		return c.JSON(http.StatusBadRequest, err)
-	}
-
-	params := user.UpdateUserAttributes{
-		Username:  input.Username,
-		FirstName: input.FirstName,
-		LastName:  input.LastName,
 	}
 
 	newGetUserById := user.NewGetUserByID(h.router)
@@ -54,7 +48,7 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 	}
 
 	newUpdateProfile := user.NewChangeProfile(h.router)
-	err = newUpdateProfile.Execute(params, idInt)
+	err = newUpdateProfile.Execute(input, idInt)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
 		c.JSON(http.StatusInternalServerError, err)

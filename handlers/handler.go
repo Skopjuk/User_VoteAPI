@@ -25,10 +25,9 @@ func NewHandler(logging *logrus.Logger, db *sqlx.DB) *Handler {
 func (h *Handler) InitRoutes() *echo.Echo {
 	router := echo.New()
 
-	auth := router.Group("/auth")
+	//	auth := router.Group("/auth")
 	api := router.Group("/api")
 	user := router.Group("/users")
-	//	usersRepository := repositories.NewUsersRepository(h.db)
 
 	api.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
 		if username == "joe" && password == "secret" {
@@ -37,16 +36,15 @@ func (h *Handler) InitRoutes() *echo.Echo {
 		return false, nil
 	}))
 	{
-		user.GET("/all_users", h.GetAll)
+		user.GET("/", h.GetAll)
 		user.PUT("/:id", h.UpdateUser)
 		user.GET("/:id", h.GetUserById)
-		user.GET("/count_users", h.GerNumberOfUsers)
+		user.GET("/count", h.GerNumberOfUsers)
 
-		auth.POST("/sign-up", h.SignUp)
-		auth.POST("/sign-in", h.SignIn)
+		user.POST("/", h.SignUp)
+		//		auth.POST("/sign-in", h.SignIn)
 
 		api.PUT("/:id", h.ChangePassword)
-
 	}
 
 	return router

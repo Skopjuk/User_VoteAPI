@@ -2,6 +2,7 @@ package user
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"userapi/models"
 )
 
@@ -23,7 +24,19 @@ type UpdateUserAttributes struct {
 }
 
 func (c *ChangeProfile) Execute(attributes UpdateUserAttributes, id int) error {
-	//винести перевірки в окрему функцію
+	err := validateUser(attributes)
+	if err != nil {
+		logrus.Errorf("error while updating user: %s", err)
+	}
+
+	return c.updateUser.UpdateUser(models.User{
+		Username:  attributes.Username,
+		FirstName: attributes.FirstName,
+		LastName:  attributes.LastName,
+	}, id)
+}
+
+func validateUser(attributes UpdateUserAttributes) error {
 	if len(attributes.FirstName) < 2 {
 		return fmt.Errorf("first name is too short")
 	} else if len(attributes.FirstName) > 50 {
@@ -38,9 +51,5 @@ func (c *ChangeProfile) Execute(attributes UpdateUserAttributes, id int) error {
 		return fmt.Errorf("username is too long")
 	}
 
-	return c.updateUser.UpdateUser(models.User{
-		Username:  attributes.Username,
-		FirstName: attributes.FirstName,
-		LastName:  attributes.LastName,
-	}, id)
+	return nil
 }
