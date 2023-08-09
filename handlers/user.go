@@ -27,17 +27,17 @@ type UpdatePasswordParams struct {
 	Password string `json:"password,omitempty"`
 }
 
-func (h *Handler) UpdateUser(c echo.Context) error {
+func (u *UsersHandler) UpdateUser(c echo.Context) error {
 	var input user.UpdateUserAttributes
 
 	idInt := GetUsersId(c)
 
 	if err := c.Bind(&input); err != nil {
-		h.logging.Errorf("failedd to bind req body: %s", err)
+		u.logging.Errorf("failedd to bind req body: %s", err)
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	newGetUserById := user.NewGetUserByID(h.router)
+	newGetUserById := user.NewGetUserByID(u.router)
 	_, err := newGetUserById.Execute(idInt)
 	if err != nil {
 		logrus.Errorf("user with id %d wasn't find", idInt)
@@ -47,7 +47,7 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 		return err
 	}
 
-	newUpdateProfile := user.NewChangeProfile(h.router)
+	newUpdateProfile := user.NewChangeProfile(u.router)
 	err = newUpdateProfile.Execute(input, idInt)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
@@ -70,7 +70,7 @@ type QueryResult struct {
 	limit string
 }
 
-func (h *Handler) GetAll(c echo.Context) error {
+func (u *UsersHandler) GetAll(c echo.Context) error {
 	q := c.Request().URL.Query()
 	page, err := strconv.Atoi(q["page"][0])
 	if err != nil {
@@ -80,7 +80,7 @@ func (h *Handler) GetAll(c echo.Context) error {
 
 	skip := strconv.Itoa((page - 1) * 10)
 
-	newGetUsers := user.NewGetAllUsers(h.router)
+	newGetUsers := user.NewGetAllUsers(u.router)
 	users, err := newGetUsers.Execute(skip)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
@@ -94,7 +94,7 @@ func (h *Handler) GetAll(c echo.Context) error {
 	return err
 }
 
-func (h *Handler) GetUserById(c echo.Context) error {
+func (u *UsersHandler) GetUserById(c echo.Context) error {
 	idInt := GetUsersId(c)
 
 	bindedUser := models.User{}
@@ -104,7 +104,7 @@ func (h *Handler) GetUserById(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	newGetUserById := user.NewGetUserByID(h.router)
+	newGetUserById := user.NewGetUserByID(u.router)
 	user, err := newGetUserById.Execute(idInt)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
@@ -122,8 +122,8 @@ func (h *Handler) GetUserById(c echo.Context) error {
 	return err
 }
 
-func (h *Handler) GerNumberOfUsers(c echo.Context) error {
-	newGetUserById := user.NewCountAllUsers(h.router)
+func (u *UsersHandler) GerNumberOfUsers(c echo.Context) error {
+	newGetUserById := user.NewCountAllUsers(u.router)
 	numOfUsers, err := newGetUserById.Execute()
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
@@ -141,11 +141,11 @@ func (h *Handler) GerNumberOfUsers(c echo.Context) error {
 	return err
 }
 
-func (h *Handler) ChangePassword(c echo.Context) error {
+func (a *AuthHandler) ChangePassword(c echo.Context) error {
 	var input UpdatePasswordParams
 	idInt := GetUsersId(c)
 
-	newGetUserById := user.NewGetUserByID(h.router)
+	newGetUserById := user.NewGetUserByID(a.router)
 	_, err := newGetUserById.Execute(idInt)
 	if err != nil {
 		logrus.Errorf("user with id %d wasn't find", idInt)
@@ -156,7 +156,7 @@ func (h *Handler) ChangePassword(c echo.Context) error {
 	}
 
 	if err := c.Bind(&input); err != nil {
-		h.logging.Errorf("failedd to bind req body: %s", err)
+		a.logging.Errorf("failedd to bind req body: %s", err)
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
@@ -164,7 +164,7 @@ func (h *Handler) ChangePassword(c echo.Context) error {
 		Password: input.Password,
 	}
 
-	newChangePassword := user.NewChangePassword(h.router)
+	newChangePassword := user.NewChangePassword(a.router)
 	err = newChangePassword.Execute(idInt, params)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
