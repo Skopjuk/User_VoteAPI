@@ -2,25 +2,17 @@ package handlers
 
 import (
 	"github.com/labstack/echo/v4"
-	"userapi/server"
+	"userapi/container"
 )
 
 type AuthHandler struct {
-	//	logging *logrus.Logger
-	container *server.Container
+	container *container.Container
 }
 
-func NewAuthHandler(container *server.Container) *AuthHandler {
+func NewAuthHandler(container *container.Container) *AuthHandler {
 	return &AuthHandler{container: container}
 }
 
 func (a *AuthHandler) SetRoutes(g *echo.Group) {
 	g.PUT("/:id", a.ChangePassword)
 }
-
-//
-//func (u *AuthHandler) InitRoutes() *echo.Echo {
-//	router := authRoutes()
-//
-//	return router
-//}

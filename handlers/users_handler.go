@@ -2,14 +2,14 @@ package handlers
 
 import (
 	"github.com/labstack/echo/v4"
-	"userapi/server"
+	"userapi/container"
 )
 
 type UsersHandler struct {
-	container *server.Container
+	container *container.Container
 }
 
-func NewUsersHandler(container *server.Container) *UsersHandler {
+func NewUsersHandler(container *container.Container) *UsersHandler {
 	return &UsersHandler{container: container}
 }
 
@@ -21,9 +21,3 @@ func (u *UsersHandler) SetRoutes(g *echo.Group) {
 	g.POST("/", u.SignUp)
 
 }
-
-//func (u *UsersHandler) InitRoutes() *echo.Echo {
-//	router := routes()
-//
-//	return router
-//}

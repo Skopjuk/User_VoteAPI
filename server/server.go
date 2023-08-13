@@ -2,21 +2,14 @@ package server
 
 import (
 	"context"
-	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"net/http"
+	"userapi/container"
 	"userapi/handlers"
 )
 
 type Server struct {
 	httpServer *http.Server
-}
-
-type Container struct {
-	Config *Config
-	DB     *sqlx.DB
 }
 
 //func (s *Server) Run(port string, handler http.Handler) error {
@@ -33,35 +26,15 @@ type Container struct {
 //	return s.httpServer.ListenAndServe()
 //}
 
-func Run(addr string) error {
+func Run(port string, containerInstance container.Container) error {
 	e := echo.New()
 
-	routes(e)
+	routes(e, containerInstance)
 
-	return e.Start(addr)
+	return e.Start(":" + port)
 }
 
-func routes(e *echo.Echo) {
-	config := Config{
-		Host:     viper.GetString("db.host"),
-		Port:     viper.GetString("db.port"),
-		Username: viper.GetString("db.username"),
-		Password: viper.GetString("db.password"),
-		DBName:   viper.GetString("db.dbname"),
-		SSLMode:  viper.GetString("db.sslmode"),
-	}
-
-	db, err := NewPostgresDB(config)
-
-	if err != nil {
-		logrus.Fatalf("cannot connect to db: %s", err.Error())
-	}
-
-	container := Container{
-		Config: &config,
-		DB:     db,
-	}
-
+func routes(e *echo.Echo, container container.Container) {
 	handlers.NewAuthHandler(&container).SetRoutes(e.Group("/auth"))
 	handlers.NewUsersHandler(&container).SetRoutes(e.Group("/users"))
 }

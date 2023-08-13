@@ -34,7 +34,7 @@ func (u *UsersHandler) SignUp(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	usersRepository := repositories.NewUsersRepository(u.db)
+	usersRepository := repositories.NewUsersRepository(u.container.DB)
 	newProfile := user.NewCreateProfile(usersRepository)
 
 	params := user.NewUserAttributes{
