@@ -13,3 +13,12 @@ type Container struct {
 	Logging    *logrus.Logger
 	Repository *repositories.UsersRepository
 }
+
+func NewContainer(config *configs.Config, DB *sqlx.DB, logging *logrus.Logger) *Container {
+
+	return &Container{Config: config,
+		DB:         DB,
+		Logging:    logging,
+		Repository: repositories.NewUsersRepository(DB),
+	}
+}
