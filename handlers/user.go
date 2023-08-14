@@ -10,6 +10,8 @@ import (
 	"userapi/usecases/user"
 )
 
+const paginationLimit = "10"
+
 type UpdateUserParams struct {
 	Username  string `json:"username,omitempty"`
 	FirstName string `json:"first_name,omitempty"`
@@ -30,7 +32,13 @@ type UpdatePasswordParams struct {
 func (u *UsersHandler) UpdateUser(c echo.Context) error {
 	var input user.UpdateUserAttributes
 
-	idInt := GetUsersId(c)
+	idInt, err := getUserId(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": fmt.Sprintf("users id %d can not be parsed", idInt),
+		})
+		return err
+	}
 
 	if err := c.Bind(&input); err != nil {
 		logrus.Errorf("failedd to bind req body: %s", err)
@@ -38,7 +46,7 @@ func (u *UsersHandler) UpdateUser(c echo.Context) error {
 	}
 
 	newGetUserById := user.NewGetUserByID(u.container.Repository)
-	_, err := newGetUserById.Execute(idInt)
+	_, err = newGetUserById.Execute(idInt)
 	if err != nil {
 		logrus.Errorf("user with id %d wasn't find", idInt)
 		c.JSON(http.StatusInternalServerError, map[string]interface{}{
@@ -71,8 +79,12 @@ type QueryResult struct {
 }
 
 func (u *UsersHandler) GetAll(c echo.Context) error {
-	q := c.Request().URL.Query()
-	page, err := strconv.Atoi(q["page"][0])
+	pageNum := c.QueryParam("page")
+	if pageNum == "" {
+		pageNum = "1"
+	}
+
+	page, err := strconv.Atoi(pageNum)
 	if err != nil {
 		logrus.Errorf("error while converting page number to int: %s", err)
 		return err
@@ -81,10 +93,12 @@ func (u *UsersHandler) GetAll(c echo.Context) error {
 	skip := strconv.Itoa((page - 1) * 10)
 
 	newGetUsers := user.NewGetAllUsers(u.container.Repository)
-	users, err := newGetUsers.Execute(skip)
+	users, err := newGetUsers.Execute(skip, paginationLimit)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
-		c.JSON(http.StatusInternalServerError, map[string]interface{}{})
+		c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": "error while parsing url",
+		})
 	}
 
 	err = c.JSON(http.StatusOK, map[string]interface{}{
@@ -95,10 +109,16 @@ func (u *UsersHandler) GetAll(c echo.Context) error {
 }
 
 func (u *UsersHandler) GetUserById(c echo.Context) error {
-	idInt := GetUsersId(c)
+	idInt, err := getUserId(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": fmt.Sprintf("users id %d can not be parsed", idInt),
+		})
+		return err
+	}
 
-	bindedUser := models.User{}
-	err := c.Bind(&bindedUser)
+	input := models.User{}
+	err = c.Bind(&input)
 	if err != nil {
 		logrus.Error("error of binding json")
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -143,10 +163,16 @@ func (u *UsersHandler) GerNumberOfUsers(c echo.Context) error {
 
 func (a *AuthHandler) ChangePassword(c echo.Context) error {
 	var input UpdatePasswordParams
-	idInt := GetUsersId(c)
+	idInt, err := getUserId(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": fmt.Sprintf("users id %d can not be parsed", idInt),
+		})
+		return err
+	}
 
 	newGetUserById := user.NewGetUserByID(a.container.Repository)
-	_, err := newGetUserById.Execute(idInt)
+	_, err = newGetUserById.Execute(idInt)
 	if err != nil {
 		logrus.Errorf("user with id %d wasn't find", idInt)
 		c.JSON(http.StatusInternalServerError, map[string]interface{}{
@@ -181,7 +207,7 @@ func (a *AuthHandler) ChangePassword(c echo.Context) error {
 	return err
 }
 
-func GetUsersId(c echo.Context) int {
+func getUserId(c echo.Context) (int, error) {
 	id := c.Param("id")
 	logrus.Infof("try to get user with id %s", id)
 
@@ -189,7 +215,8 @@ func GetUsersId(c echo.Context) int {
 	if err != nil {
 		logrus.Errorf("error of converting id to int. id: %s", id)
 		c.JSON(http.StatusInternalServerError, err.Error())
+		return 0, err
 	}
 
-	return idInt
+	return idInt, nil
 }

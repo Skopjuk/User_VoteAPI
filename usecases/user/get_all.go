@@ -13,9 +13,9 @@ func NewGetAllUsers(repository GetAll) *GetAllUsers {
 	return &GetAllUsers{repository: repository}
 }
 
-func (a *GetAllUsers) Execute(skip string) ([]models.User, error) {
+func (a *GetAllUsers) Execute(skip string, paginationLimit string) ([]models.User, error) {
 	logrus.Info("try to get all users")
-	users, err := a.repository.GetAll(skip)
+	users, err := a.repository.GetAll(skip, paginationLimit)
 	if err != nil {
 		logrus.Errorf("users wern't found: %s", err)
 		return nil, err

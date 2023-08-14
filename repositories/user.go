@@ -3,7 +3,6 @@ package repositories
 import (
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
-
 	//	"userapi"
 	"userapi/models"
 )
@@ -46,9 +45,9 @@ func (u *UsersRepository) UpdateUser(user models.User, id int) error {
 	return err
 }
 
-func (u *UsersRepository) GetAll(skip string) (usersList []models.User, err error) {
-	query := "SELECT * FROM users LIMIT 10 OFFSET $1"
-	err = u.db.Select(&usersList, query, skip)
+func (u *UsersRepository) GetAll(skip string, paginationLimit string) (usersList []models.User, err error) {
+	query := "SELECT * FROM users LIMIT $1 OFFSET $2"
+	err = u.db.Select(&usersList, query, paginationLimit, skip)
 
 	if err != nil {
 		logrus.Errorf("users not found %s")

@@ -68,37 +68,3 @@ func (u *UsersHandler) SignUp(c echo.Context) error {
 
 	return err
 }
-
-//func (h *Handler) SignIn(c echo.Context) error {
-//	var input SignInParams
-//
-//	if err := c.Bind(&input); err != nil {
-//		h.logging.Errorf("failed to bind req body: %s", err)
-//		return c.JSON(http.StatusBadRequest, err.Error())
-//	}
-//
-//	params := user.AuthenticateAttributes{
-//		Username: input.Username,
-//		Password: input.Password,
-//	}
-//
-//	usersRepository := repositories.NewUsersRepository(h.db)
-//	newAuthentication := user.NewAuthenticate(usersRepository)
-//	foundUser, err := newAuthentication.Execute(params)
-//	if err != nil {
-//		logrus.Errorf("cannot execute usecase: %s", err.Error())
-//		c.JSON(http.StatusUnauthorized, map[string]interface{}{
-//			"user": foundUser,
-//		})
-//		return err
-//	}
-//
-//	err = c.JSON(http.StatusOK, map[string]interface{}{
-//		"user": foundUser,
-//	})
-//	if err != nil {
-//		logrus.Errorf("troubles with sending http status: %s", err)
-//	}
-//
-//	return err
-//}

@@ -29,7 +29,7 @@ type ChangeUsersPassword interface {
 }
 
 type GetAll interface {
-	GetAll(skip string) (usersList []models.User, err error)
+	GetAll(skip string, paginationLimit string) (usersList []models.User, err error)
 }
 
 type GetUserById interface {
