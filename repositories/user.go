@@ -16,8 +16,8 @@ func NewUsersRepository(db *sqlx.DB) *UsersRepository {
 }
 
 func (u *UsersRepository) InsertUser(user models.User) (id int, err error) {
-	query := "INSERT INTO users (username, password, first_name, last_name) values ($1, $2, $3, $4) RETURNING id"
-	row := u.db.QueryRow(query, user.Username, user.Password, user.FirstName, user.LastName)
+	query := "INSERT INTO users (username, password, first_name, last_name, role) values ($1, $2, $3, $4, $5) RETURNING id"
+	row := u.db.QueryRow(query, user.Username, user.Password, user.FirstName, user.LastName, user.Role)
 	if err = row.Scan(&id); err != nil {
 		logrus.Errorf("user with id %s wasn't found", id)
 	}

@@ -13,11 +13,11 @@ func main() {
 	logging.SetReportCaller(true)
 	logging.Info("create router")
 
-	if err := configs.InitConfig(); err != nil {
+	config, err := configs.NewConfig()
+
+	if err != nil {
 		logrus.Fatalf("error initializing configs: %s", err.Error())
 	}
-
-	config := configs.NewConfig()
 
 	db, err := server.NewPostgresDB(config)
 

@@ -11,7 +11,11 @@ type Config struct {
 	SSLMode  string
 }
 
-func NewConfig() Config {
+func NewConfig() (Config, error) {
+	viper.AddConfigPath("configs")
+	viper.SetConfigName("config")
+	err := viper.ReadInConfig()
+
 	return Config{
 		Host:     viper.GetString("db.host"),
 		Port:     viper.GetString("db.port"),
@@ -19,11 +23,5 @@ func NewConfig() Config {
 		Password: viper.GetString("db.password"),
 		DBName:   viper.GetString("db.dbname"),
 		SSLMode:  viper.GetString("db.sslmode"),
-	}
-}
-
-func InitConfig() error {
-	viper.AddConfigPath("configs")
-	viper.SetConfigName("config")
-	return viper.ReadInConfig()
+	}, err
 }

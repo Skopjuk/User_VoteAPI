@@ -18,21 +18,24 @@ func NewChangeProfile(updateUser UpdateUser) *ChangeProfile {
 }
 
 type UpdateUserAttributes struct {
-	Username  string
-	FirstName string
-	LastName  string
+	Username  string `json:"username,omitempty"`
+	FirstName string `json:"first_name,omitempty"`
+	LastName  string `json:"last_name,omitempty"`
+	Role      string `json:"role,omitempty"`
 }
 
 func (c *ChangeProfile) Execute(attributes UpdateUserAttributes, id int) error {
 	err := validateUser(attributes)
 	if err != nil {
 		logrus.Errorf("error while updating user: %s", err)
+		return err
 	}
 
 	return c.updateUser.UpdateUser(models.User{
 		Username:  attributes.Username,
 		FirstName: attributes.FirstName,
 		LastName:  attributes.LastName,
+		Role:      attributes.Role,
 	}, id)
 }
 

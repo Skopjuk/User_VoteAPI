@@ -12,16 +12,16 @@ import (
 
 const paginationLimit = "10"
 
-type UpdateUserParams struct {
-	Username  string `json:"username,omitempty"`
-	FirstName string `json:"first_name,omitempty"`
-	LastName  string `json:"last_name,omitempty"`
-}
-
 type GetAllUsersParams struct {
 	Username  string `json:"username,omitempty"`
 	FirstName string `json:"first_name,omitempty"`
 	LastName  string `json:"last_name,omitempty"`
+	Role      string `json:"role,omitempty"`
+}
+
+type QueryResult struct {
+	skip  string
+	limit string
 }
 
 type UpdatePasswordParams struct {
@@ -29,7 +29,7 @@ type UpdatePasswordParams struct {
 	Password string `json:"password,omitempty"`
 }
 
-func (u *UsersHandler) UpdateUser(c echo.Context) error {
+func (a *AuthHandler) UpdateUser(c echo.Context) error {
 	var input user.UpdateUserAttributes
 
 	idInt, err := getUserId(c)
@@ -41,11 +41,11 @@ func (u *UsersHandler) UpdateUser(c echo.Context) error {
 	}
 
 	if err := c.Bind(&input); err != nil {
-		logrus.Errorf("failedd to bind req body: %s", err)
+		logrus.Errorf("failed to bind req body: %s", err)
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	newGetUserById := user.NewGetUserByID(u.container.Repository)
+	newGetUserById := user.NewGetUserByID(a.container.Repository)
 	_, err = newGetUserById.Execute(idInt)
 	if err != nil {
 		logrus.Errorf("user with id %d wasn't find", idInt)
@@ -55,11 +55,13 @@ func (u *UsersHandler) UpdateUser(c echo.Context) error {
 		return err
 	}
 
-	newUpdateProfile := user.NewChangeProfile(u.container.Repository)
+	newUpdateProfile := user.NewChangeProfile(a.container.Repository)
 	err = newUpdateProfile.Execute(input, idInt)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
-		c.JSON(http.StatusInternalServerError, err)
+		c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": err.Error(),
+		})
 		return err
 	}
 
@@ -71,11 +73,6 @@ func (u *UsersHandler) UpdateUser(c echo.Context) error {
 	}
 
 	return err
-}
-
-type QueryResult struct {
-	skip  string
-	limit string
 }
 
 func (u *UsersHandler) GetAll(c echo.Context) error {
@@ -163,6 +160,7 @@ func (u *UsersHandler) GerNumberOfUsers(c echo.Context) error {
 
 func (a *AuthHandler) ChangePassword(c echo.Context) error {
 	var input UpdatePasswordParams
+
 	idInt, err := getUserId(c)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, map[string]interface{}{

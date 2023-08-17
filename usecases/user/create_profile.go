@@ -17,6 +17,7 @@ type NewUserAttributes struct {
 	FirstName string
 	LastName  string
 	Password  string
+	Role      string
 }
 
 func NewCreateProfile(repository InsertUser) *CreateProfile {
@@ -34,6 +35,7 @@ func (c *CreateProfile) Execute(attributes NewUserAttributes) (id int, err error
 		Username:  attributes.Username,
 		FirstName: attributes.FirstName,
 		LastName:  attributes.LastName,
+		Role:      attributes.Role,
 		Password:  PasswordHashing(attributes.Password),
 	})
 	if err != nil {
@@ -60,6 +62,8 @@ func parametersValidation(attributes NewUserAttributes) error {
 		return errors.New("first name is too short")
 	} else if len(attributes.LastName) > 50 {
 		return errors.New("last name is too long")
+	} else if attributes.Role != "user" && attributes.Role != "moderator" && attributes.Role != "admin" {
+		return errors.New("user role is not valid")
 	} else if len(attributes.Password) < 6 {
 		return errors.New("password is too short")
 	} else if len(attributes.Username) < 3 {
