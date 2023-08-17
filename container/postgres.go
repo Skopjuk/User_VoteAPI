@@ -1,4 +1,4 @@
-package server
+package container
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ const (
 func NewPostgresDB(cfg configs.Config) (*sqlx.DB, error) {
 
 	db, err := sqlx.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",
-		cfg.Host, cfg.Port, cfg.Username, cfg.DBName, cfg.Password, cfg.SSLMode))
+		cfg.Host, cfg.DBPort, cfg.Username, cfg.DBName, cfg.Password, cfg.SSLMode))
 	if err != nil {
 		return nil, err
 	}
