@@ -18,7 +18,7 @@ func main() {
 		logrus.Fatalf("error initializing configs: %s", err.Error())
 	}
 
-	containerInstance := *container.NewContainer(&config, logging)
+	containerInstance := *container.NewContainer(config, logging)
 	if err := server.Run(config.Port, containerInstance); err != nil {
 		logrus.Fatalf("error occured while running http server: %s, address: %s", err.Error(), config.Port)
 	}

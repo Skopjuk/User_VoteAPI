@@ -85,3 +85,13 @@ func (u *UsersRepository) CountUsers() (numberOfUsers int, err error) {
 
 	return numberOfUsers, err
 }
+
+func (u *UsersRepository) DeleteUser(id int) error {
+	query := "DELETE FROM users WHERE id=$1"
+	_, err := u.db.Query(query, id)
+	if err != nil {
+		logrus.Errorf("query for deleting user can not be executed")
+	}
+
+	return err
+}

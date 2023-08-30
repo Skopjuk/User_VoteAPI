@@ -13,7 +13,7 @@ type FindUserByUsername interface {
 }
 
 type DeleteUser interface {
-	DeleteUser(username string) error
+	DeleteUser(id int) error
 }
 
 type UpdateUser interface {

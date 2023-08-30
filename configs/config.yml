@@ -1,4 +1,5 @@
 port: "8080"
+signingKey: "djf2kj9(9e9)#j"
 
 db:
   host: "localhost"

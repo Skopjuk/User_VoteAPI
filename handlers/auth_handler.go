@@ -14,22 +14,22 @@ func NewAuthHandler(container *container.Container) *AuthHandler {
 	return &AuthHandler{container: container}
 }
 
-func (a *AuthHandler) SetRoutes(e *echo.Echo) {
-	g := e.Group("/auth", func(next echo.HandlerFunc) echo.HandlerFunc {
+func (a *AuthHandler) SetRoutes(e *echo.Echo, group *echo.Group) {
+	g := e.Group("/account", func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			err := a.UserIdentity(c)
 			if err != nil {
 				return err
 			}
 			if c.Get("userRole") != "admin" {
-				c.JSON(http.StatusForbidden, map[string]interface{}{
+				return c.JSON(http.StatusForbidden, map[string]interface{}{
 					"error": "you should be admin for this action",
 				})
-				return err
 			}
 			return next(c)
 		}
 	})
-	g.PUT("/:id", a.ChangePassword)
-	g.PATCH("/:id", a.UpdateUser)
+	g.PUT("/:id/change_password", a.ChangePassword)
+	g.PATCH("/:id/update_user", a.UpdateUser)
+	g.DELETE("/:id/delete", a.DeleteUser)
 }

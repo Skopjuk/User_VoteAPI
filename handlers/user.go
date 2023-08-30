@@ -205,6 +205,42 @@ func (a *AuthHandler) ChangePassword(c echo.Context) error {
 	return err
 }
 
+func (a *AuthHandler) DeleteUser(c echo.Context) error {
+	idInt, err := getUserId(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": fmt.Sprintf("users id %d can not be parsed", idInt),
+		})
+		return err
+	}
+
+	newGetUserById := user.NewGetUserByID(a.container.Repository)
+	_, err = newGetUserById.Execute(idInt)
+	if err != nil {
+		logrus.Errorf("user with id %d wasn't find", idInt)
+		c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": fmt.Sprintf("user with id %d wasn't find", idInt),
+		})
+		return err
+	}
+
+	newDeleteUser := user.NewDeleteProfile(a.container.Repository)
+	err = newDeleteUser.Execute(idInt)
+	if err != nil {
+		logrus.Errorf("can not execute usecase: %s", err)
+		c.JSON(http.StatusInternalServerError, err)
+		return err
+	}
+	err = c.JSON(http.StatusOK, map[string]interface{}{
+		"status_deleting_user": "deleted",
+	})
+	if err != nil {
+		logrus.Errorf("troubles with sending http status: %s", err)
+	}
+
+	return err
+}
+
 func getUserId(c echo.Context) (int, error) {
 	id := c.Param("id")
 	logrus.Infof("try to get user with id %s", id)

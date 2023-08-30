@@ -1,32 +1,19 @@
 package user
 
-import "fmt"
-
 type DeleteProfile struct {
-	deleteRepository DeleteUserRepository
-	authenticate     AuthenticateUser
+	deleteRepository DeleteUser
+	getUserById      GetUserById
 }
 
-func NewDeleteProfile() *DeleteProfile {
-	return &DeleteProfile{}
+func NewDeleteProfile(deleteRepository DeleteUser) *DeleteProfile {
+	return &DeleteProfile{deleteRepository: deleteRepository}
 }
 
-type DeleteUserRepository interface {
-	FindUserByUsername
-	AuthenticateUser
-	DeleteUser
-}
+func (c *DeleteProfile) Execute(id int) error {
+	//authenticated := c.authenticate.AuthenticateUser(attributes.Username, attributes.Password)
+	//if !authenticated {
+	//	return fmt.Errorf("user is not autheniticated")
+	//}
 
-type DeleteUserAttributes struct {
-	Username string
-	Password string
-}
-
-func (c *DeleteProfile) Execute(attributes DeleteUserAttributes) error {
-	authenticated := c.authenticate.AuthenticateUser(attributes.Username, attributes.Password)
-	if !authenticated {
-		return fmt.Errorf("user is not autheniticated")
-	}
-
-	return c.deleteRepository.DeleteUser(attributes.Username)
+	return c.deleteRepository.DeleteUser(id)
 }

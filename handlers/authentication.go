@@ -1,19 +1,20 @@
 package handlers
 
 import (
+	"errors"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
 	"time"
+	"userapi/configs"
 	"userapi/repositories"
 	"userapi/usecases/user"
 )
 
 const (
-	signingKey = "djf2kj9(9e9)#j"
-	timeTTL    = 24
+	timeTTL = 24
 )
 
 type TokenClaims struct {
@@ -105,6 +106,9 @@ func (u *UsersHandler) SignIn(c echo.Context) error {
 	})
 	if err != nil {
 		logrus.Errorf("troubles with sending http status: %s", err)
+		err = c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"token": token,
+		})
 	}
 
 	return err
@@ -126,16 +130,81 @@ func (u *UsersHandler) GenerateToken(username, password string) (string, error) 
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &TokenClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * timeTTL)),
 		},
 		UserId: foundUser.Id,
 		Role:   foundUser.Role,
 	})
 
-	signedString, err := token.SignedString([]byte(signingKey))
+	config, err := configs.NewConfig()
+	if err != nil {
+		logrus.Error("config is not available")
+		return "", err
+	}
+	signedString, err := token.SignedString([]byte(config.SigningKey))
 	if err != nil {
 		return "", err
 	}
 
 	return signedString, nil
+}
+
+func (a *AuthHandler) UserIdentity(c echo.Context) error {
+	header := c.Request().Header.Get("Authorization")
+	if header == "" {
+		c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error": "authorization header is empty",
+		})
+		logrus.Errorf("authorization header is empty, user: %s", c.Param("username"))
+		return errors.New("authorization header is empty")
+	}
+
+	headerParts := strings.Split(header, " ")
+	if len(headerParts) != 2 {
+		c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error": "authorization header is invalid",
+		})
+		logrus.Errorf("authorization header is invalid, user: %s", c.Param("username"))
+		return errors.New("authorization header is invalid")
+	}
+
+	userId, userRole, err := ParseToken(headerParts[1])
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, err.Error())
+		logrus.Errorf("token can not be parsed")
+		return errors.New(err.Error())
+	}
+
+	c.Set("userId", userId)
+	c.Set("userRole", userRole)
+
+	return nil
+}
+
+func ParseToken(accessToken string) (int, string, error) {
+	token, err := jwt.ParseWithClaims(accessToken, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("invalid signing method")
+		}
+
+		config, err := configs.NewConfig()
+		if err != nil {
+			logrus.Error("config is not available")
+			return "", err
+		}
+
+		return []byte(config.SigningKey), nil
+	})
+
+	if err != nil {
+		return 0, "", err
+	}
+
+	claims, ok := token.Claims.(*TokenClaims)
+	if !ok {
+		return 0, "", errors.New("token claims are not of type *TokenClaims")
+	}
+
+	return claims.UserId, claims.Role, nil
+
 }
