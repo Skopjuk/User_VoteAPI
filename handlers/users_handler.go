@@ -18,5 +18,4 @@ func (u *UsersHandler) SetRoutes(g *echo.Group) {
 	g.GET("/:id", u.GetUserById)
 	g.GET("/count", u.GerNumberOfUsers)
 	g.POST("/", u.SignUp)
-	g.GET("/login", u.SignIn)
 }
