@@ -8,17 +8,22 @@ import (
 )
 
 type Container struct {
-	Config     *configs.Config
+	Config     configs.Config
 	DB         *sqlx.DB
 	Logging    *logrus.Logger
 	Repository *repositories.UsersRepository
 }
 
-func NewContainer(config *configs.Config, DB *sqlx.DB, logging *logrus.Logger) *Container {
+func NewContainer(config configs.Config, logging *logrus.Logger) *Container {
+	db, err := NewPostgresDB(config)
+
+	if err != nil {
+		logrus.Fatalf("cannot connect to db: %s", err.Error())
+	}
 
 	return &Container{Config: config,
-		DB:         DB,
+		DB:         db,
 		Logging:    logging,
-		Repository: repositories.NewUsersRepository(DB),
+		Repository: repositories.NewUsersRepository(db),
 	}
 }

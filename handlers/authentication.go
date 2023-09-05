@@ -1,24 +1,33 @@
 package handlers
 
 import (
+	"errors"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
+	"userapi/configs"
 	"userapi/repositories"
 	"userapi/usecases/user"
 )
+
+const (
+	timeTTL = 24
+)
+
+type TokenClaims struct {
+	jwt.RegisteredClaims
+	UserId int    `json:"user_id"`
+	Role   string `json:"role"`
+}
 
 type SignUpParams struct {
 	Username  string `json:"username,omitempty"`
 	FirstName string `json:"first_name,omitempty"`
 	LastName  string `json:"last_name,omitempty"`
+	Role      string `json:"role,omitempty"`
 	Password  string `json:"password,omitempty"`
-}
-
-type SignInParams struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
 }
 
 func (u *UsersHandler) SignUp(c echo.Context) error {
@@ -41,6 +50,7 @@ func (u *UsersHandler) SignUp(c echo.Context) error {
 		Username:  input.Username,
 		FirstName: input.FirstName,
 		LastName:  input.LastName,
+		Role:      input.Role,
 		Password:  input.Password,
 	}
 	id, err := newProfile.Execute(params)
@@ -67,4 +77,57 @@ func (u *UsersHandler) SignUp(c echo.Context) error {
 	}
 
 	return err
+}
+
+func userIdentity(c echo.Context) error {
+	header := c.Request().Header.Get("Authorization")
+	if header == "" {
+		logrus.Errorf("authorization header is empty, user: %s", c.Param("username"))
+		return errors.New("authorization header is empty")
+	}
+
+	headerParts := strings.Split(header, " ")
+	if len(headerParts) != 2 {
+		logrus.Errorf("authorization header is invalid, user: %s", c.Param("username"))
+		return errors.New("authorization header is invalid")
+	}
+
+	userId, userRole, err := parseToken(headerParts[1])
+	if err != nil {
+		logrus.Errorf("token can not be parsed")
+		return errors.New(err.Error())
+	}
+
+	c.Set("userId", userId)
+	c.Set("userRole", userRole)
+
+	return nil
+}
+
+func parseToken(accessToken string) (int, string, error) {
+	token, err := jwt.ParseWithClaims(accessToken, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("invalid signing method")
+		}
+
+		config, err := configs.NewConfig()
+		if err != nil {
+			logrus.Error("config is not available")
+			return "", err
+		}
+
+		return []byte(config.SigningKey), nil
+	})
+
+	if err != nil {
+		return 0, "", err
+	}
+
+	claims, ok := token.Claims.(*TokenClaims)
+	if !ok {
+		return 0, "", errors.New("token claims are not of type *TokenClaims")
+	}
+
+	return claims.UserId, claims.Role, nil
+
 }
