@@ -31,6 +31,11 @@ func (l *LoginHandler) SignIn(c echo.Context) error {
 	}
 
 	token, err := l.GenerateToken(params.Username, params.Password)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
+			"message": "user do not exist",
+		})
+	}
 
 	err = c.JSON(http.StatusOK, map[string]interface{}{
 		"token": token,
@@ -55,7 +60,6 @@ func (l *LoginHandler) GenerateToken(username, password string) (string, error) 
 	foundUser, err := newAuthentication.Execute(params)
 	if err != nil {
 		logrus.Errorf("cannot execute usecase: %s", err.Error())
-
 		return "", err
 	}
 

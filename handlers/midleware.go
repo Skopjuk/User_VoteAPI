@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func Middleware(next echo.HandlerFunc) echo.HandlerFunc {
+func UserIdentityMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		err := userIdentity(c)
 		if err != nil {

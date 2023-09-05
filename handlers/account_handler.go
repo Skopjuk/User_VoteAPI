@@ -14,7 +14,6 @@ func NewAccountHandler(container *container.Container) *AccountHandler {
 }
 
 func (a *AccountHandler) SetRoutes(g *echo.Group) {
-
 	g.PUT("/:id/change_password", a.ChangePassword)
 	g.PATCH("/:id/update_user", a.UpdateUser)
 	g.DELETE("/:id/delete", a.DeleteUser)

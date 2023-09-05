@@ -82,25 +82,18 @@ func (u *UsersHandler) SignUp(c echo.Context) error {
 func userIdentity(c echo.Context) error {
 	header := c.Request().Header.Get("Authorization")
 	if header == "" {
-		c.JSON(http.StatusBadRequest, map[string]interface{}{
-			"error": "authorization header is empty",
-		})
 		logrus.Errorf("authorization header is empty, user: %s", c.Param("username"))
 		return errors.New("authorization header is empty")
 	}
 
 	headerParts := strings.Split(header, " ")
 	if len(headerParts) != 2 {
-		c.JSON(http.StatusBadRequest, map[string]interface{}{
-			"error": "authorization header is invalid",
-		})
 		logrus.Errorf("authorization header is invalid, user: %s", c.Param("username"))
 		return errors.New("authorization header is invalid")
 	}
 
 	userId, userRole, err := parseToken(headerParts[1])
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, err.Error())
 		logrus.Errorf("token can not be parsed")
 		return errors.New(err.Error())
 	}

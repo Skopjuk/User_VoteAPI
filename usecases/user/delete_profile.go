@@ -10,10 +10,5 @@ func NewDeleteProfile(deleteRepository DeleteUser) *DeleteProfile {
 }
 
 func (c *DeleteProfile) Execute(id int) error {
-	//authenticated := c.authenticate.AuthenticateUser(attributes.Username, attributes.Password)
-	//if !authenticated {
-	//	return fmt.Errorf("user is not autheniticated")
-	//}
-
 	return c.deleteRepository.DeleteUser(id)
 }

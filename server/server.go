@@ -21,7 +21,7 @@ func Run(port string, containerInstance container.Container) error {
 }
 
 func routes(e *echo.Echo, container container.Container) {
-	handlers.NewAccountHandler(&container).SetRoutes(e.Group("/account", handlers.Middleware))
+	handlers.NewAccountHandler(&container).SetRoutes(e.Group("/account", handlers.UserIdentityMiddleware))
 	handlers.NewUsersHandler(&container).SetRoutes(e.Group("/users"))
 	handlers.NewLoginHandler(&container).SetRoutes(e.Group("/authentication"))
 }
