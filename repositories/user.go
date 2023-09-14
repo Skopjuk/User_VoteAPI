@@ -25,6 +25,15 @@ func (u *UsersRepository) InsertUser(user models.User) (id int, err error) {
 	return id, err
 }
 
+func (u *UsersRepository) AddVoteRecord(vote models.Rate) error {
+	query := "INSERT INTO rates (user_id, rated_user_id, username_who_votes, username_for_whom_votes, rate) values ($1, $2, $3, $4, $5)"
+	_, err := u.db.Query(query, vote.UserId, vote.RatedUserId, vote.UsernameWhoVotes, vote.UsernameForWhomVotes, vote.Rate)
+	if err != nil {
+		logrus.Errorf("vote wasn't inserted to DB: %s", err)
+	}
+	return err
+}
+
 func (u *UsersRepository) FindUserByUsername(username string) (user models.User, err error) {
 	query := "SELECT * FROM users WHERE username=$1 LIMIT 1"
 	err = u.db.Get(&user, query, username)
@@ -54,6 +63,16 @@ func (u *UsersRepository) GetAll(skip string, paginationLimit string) (usersList
 	}
 
 	return usersList, err
+}
+
+func (u *UsersRepository) GetAllVotes() (votesList []models.Rate, err error) {
+	query := "SELECT * FROM rates"
+	err = u.db.Select(&votesList, query)
+	if err != nil {
+		logrus.Errorf("votes were not found: %s", err)
+	}
+
+	return votesList, err
 }
 
 func (u *UsersRepository) GetUserById(id int) (user models.User, err error) {

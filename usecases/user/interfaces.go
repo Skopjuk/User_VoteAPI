@@ -43,3 +43,11 @@ type CountUsers interface {
 type CheckIfUserExists interface {
 	CheckIfUserExist(id int) error
 }
+
+type AddVoteRecord interface {
+	AddVoteRecord(vote models.Rate) error
+}
+
+type GetAllVotes interface {
+	GetAllVotes() (votesList []models.Rate, err error)
+}

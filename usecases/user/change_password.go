@@ -3,7 +3,6 @@ package user
 import "fmt"
 
 type ChangePassword struct {
-	//	repository          AuthenticateUser
 	repository ChangeUsersPassword
 }
 
