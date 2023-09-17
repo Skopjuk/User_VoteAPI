@@ -51,3 +51,19 @@ type AddVoteRecord interface {
 type GetAllVotes interface {
 	GetAllVotes() (votesList []models.Rate, err error)
 }
+
+type GetUsersRate interface {
+	GetUsersRate(id int) (rate int, err error)
+}
+
+type CheckIfUserVotedForSomeUser interface {
+	CheckIfUserVotedForSomeUser(userWhoVote, userForWhomVote int) (err error)
+}
+
+type ChangeVote interface {
+	ChangeVote(vote models.Rate, id int) (err error)
+}
+
+type DeleteVote interface {
+	DeleteVote(id int) (err error)
+}

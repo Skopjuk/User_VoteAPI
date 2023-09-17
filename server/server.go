@@ -24,7 +24,7 @@ func routes(e *echo.Echo, container container.Container) {
 	handlers.NewAccountHandler(&container).SetRoutes(e.Group("/account", handlers.UserIdentityMiddleware))
 	handlers.NewUsersHandler(&container).SetRoutes(e.Group("/users"))
 	handlers.NewLoginHandler(&container).SetRoutes(e.Group("/authentication"))
-	handlers.NewVotesHandler(&container).SetRoutes(e.Group("/vote"))
+	handlers.NewVotesHandler(&container).SetRoutes(e.Group("/vote", handlers.UserIdentityMiddleware))
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {

@@ -1,9 +1,7 @@
 package user
 
 import (
-	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"userapi/models"
 )
 
@@ -24,13 +22,7 @@ func NewVote(repository AddVoteRecord) *Vote {
 }
 
 func (v *Vote) Execute(attributes NewVoteAttributes) error {
-	err := voteParametersValidation(attributes)
-	if err != nil {
-		logrus.Errorf("error while adding vote: %s", err)
-		return err
-	}
-
-	err = v.repository.AddVoteRecord(models.Rate{
+	err := v.repository.AddVoteRecord(models.Rate{
 		UserId:               attributes.UserId,
 		RatedUserId:          attributes.RatedUserId,
 		UsernameWhoVotes:     attributes.UsernameWhoVotes,
@@ -42,12 +34,5 @@ func (v *Vote) Execute(attributes NewVoteAttributes) error {
 		return err
 	}
 
-	return nil
-}
-
-func voteParametersValidation(attributes NewVoteAttributes) error {
-	if attributes.Rate != 1 && attributes.Rate != -1 {
-		return errors.New("rate should be -1 or 1")
-	}
 	return nil
 }

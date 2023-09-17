@@ -32,7 +32,7 @@ type UpdatePasswordParams struct {
 func (a *AccountHandler) UpdateUser(c echo.Context) error {
 	var input user.UpdateUserAttributes
 
-	idInt, err := getUserId(c)
+	idInt, err := getIdFromEndpoint(c)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error": fmt.Sprintf("users id %d can not be parsed", idInt),
@@ -106,7 +106,7 @@ func (u *UsersHandler) GetAll(c echo.Context) error {
 }
 
 func (u *UsersHandler) GetUserById(c echo.Context) error {
-	idInt, err := getUserId(c)
+	idInt, err := getIdFromEndpoint(c)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error": fmt.Sprintf("users id %d can not be parsed", idInt),
@@ -161,7 +161,7 @@ func (u *UsersHandler) GerNumberOfUsers(c echo.Context) error {
 func (a *AccountHandler) ChangePassword(c echo.Context) error {
 	var input UpdatePasswordParams
 
-	idInt, err := getUserId(c)
+	idInt, err := getIdFromEndpoint(c)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error": fmt.Sprintf("users id %d can not be parsed", idInt),
@@ -206,7 +206,7 @@ func (a *AccountHandler) ChangePassword(c echo.Context) error {
 }
 
 func (a *AccountHandler) DeleteUser(c echo.Context) error {
-	idInt, err := getUserId(c)
+	idInt, err := getIdFromEndpoint(c)
 	if err != nil {
 		return err
 	}
@@ -238,15 +238,14 @@ func (a *AccountHandler) DeleteUser(c echo.Context) error {
 	return err
 }
 
-func getUserId(c echo.Context) (int, error) {
+func getIdFromEndpoint(c echo.Context) (int, error) {
 	id := c.Param("id")
-	logrus.Infof("try to get user with id %s", id)
 
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
 		logrus.Errorf("error of converting id to int. id: %s", id)
 		return 0, c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			"error": fmt.Sprintf("users id %d can not be parsed", idInt),
+			"error": fmt.Sprintf("id %d can not be parsed", idInt),
 		})
 	}
 
