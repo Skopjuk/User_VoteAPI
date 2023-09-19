@@ -1,10 +1,12 @@
-package user
+package votes
+
+import "userapi/usecases/user"
 
 type GetUserRateById struct {
-	repository GetUsersRate
+	repository user.GetUsersRate
 }
 
-func NewGetUserRateById(repository GetUsersRate) *GetUserRateById {
+func NewGetUserRateById(repository user.GetUsersRate) *GetUserRateById {
 	return &GetUserRateById{repository: repository}
 }
 

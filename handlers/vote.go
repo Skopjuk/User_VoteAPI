@@ -7,15 +7,14 @@ import (
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"userapi/repositories"
-	"userapi/usecases/user"
+	"userapi/usecases/rating"
+	"userapi/usecases/votes"
 )
 
 type VoteParams struct {
-	UserId               int    `json:"user_id"`
-	RatedUserId          int    `json:"rated_user_id"`
-	UsernameWhoVotes     string `json:"username_who_votes"`
-	UsernameForWhomVotes string `json:"username_for_whom_votes"`
-	Rate                 int    `json:"rate"`
+	UserId      int `json:"user_id"`
+	RatedUserId int `json:"rated_user_id"`
+	Vote        int `json:"vote"`
 }
 
 func (v *VotesHandler) Vote(c echo.Context) error {
@@ -33,7 +32,7 @@ func (v *VotesHandler) Vote(c echo.Context) error {
 		})
 	}
 
-	newCheckIfUserAlreadyVoted := user.NewCheckIfUserAlreadyVotedForSomebody(v.container.Repository)
+	newCheckIfUserAlreadyVoted := votes.NewCheckIfUserAlreadyVotedForSomebody(v.container.Repository)
 	err := newCheckIfUserAlreadyVoted.Execute(input.UserId, input.RatedUserId)
 	if err != nil {
 		logrus.Errorf("user with %d already voted for user with id %d", input.UserId, input.RatedUserId)
@@ -42,26 +41,38 @@ func (v *VotesHandler) Vote(c echo.Context) error {
 		})
 	}
 
-	newGetRateByUserId := user.NewGetUserRateById(v.container.Repository)
-	rate, err := newGetRateByUserId.Execute(input.UserId)
-	if err != nil {
-		logrus.Errorf("user with id %d wasn't find: %s", input.UserId, err)
-	}
-
 	userRepository := repositories.NewUsersRepository(v.container.DB)
-	newVote := user.NewVote(userRepository)
+	newVote := votes.NewVote(userRepository)
 
-	params := user.NewVoteAttributes{
-		UserId:               input.UserId,
-		RatedUserId:          input.RatedUserId,
-		UsernameWhoVotes:     input.UsernameWhoVotes,
-		UsernameForWhomVotes: input.UsernameForWhomVotes,
-		Rate:                 rate + input.Rate,
+	params := votes.NewVoteAttributes{
+		UserId:      input.UserId,
+		RatedUserId: input.RatedUserId,
+		Vote:        input.Vote,
 	}
 	err = newVote.Execute(params)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
 		return err
+	}
+
+	err = v.checkIfUserAlreadyHaveRating(input.RatedUserId)
+	if err != nil {
+		err = v.createUserRating(input.RatedUserId, input.Vote)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+				"error": "error while listing users rating",
+			})
+		}
+	} else {
+		newGetUserRating := rating.NewGetUserRating(v.container.Repository)
+		userRating, err := newGetUserRating.Execute(input.RatedUserId)
+		newRating := userRating + input.Vote
+
+		err = v.updateUsersRating(input.RatedUserId, newRating)
+		if err != nil {
+			logrus.Errorf("Error while updating users rating: %s", err)
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
 	}
 
 	err = c.JSON(http.StatusOK, map[string]interface{}{
@@ -72,7 +83,7 @@ func (v *VotesHandler) Vote(c echo.Context) error {
 }
 
 func (v *VotesHandler) GetAllVotes(c echo.Context) error {
-	newGetVotes := user.NewGetListOfVotes(v.container.Repository)
+	newGetVotes := votes.NewGetListOfVotes(v.container.Repository)
 	votes, err := newGetVotes.Execute()
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
@@ -86,7 +97,7 @@ func (v *VotesHandler) GetAllVotes(c echo.Context) error {
 }
 
 func (v *VotesHandler) UpdateVote(c echo.Context) error {
-	var input user.ChangeRateAttributes
+	var input votes.ChangeRateAttributes
 
 	idInt, err := getIdFromEndpoint(c)
 	if err != nil {
@@ -102,7 +113,7 @@ func (v *VotesHandler) UpdateVote(c echo.Context) error {
 		})
 	}
 
-	newChangeVote := user.NewChangeRate(v.container.Repository)
+	newChangeVote := votes.NewChangeRate(v.container.Repository)
 	err = newChangeVote.Execute(input, idInt)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
@@ -127,7 +138,7 @@ func (v *VotesHandler) DeleteVote(c echo.Context) error {
 		return err
 	}
 
-	newDeleteVote := user.NewDeleteRate(v.container.Repository)
+	newDeleteVote := votes.NewDeleteUsersVote(v.container.Repository)
 	err = newDeleteVote.Execute(idInt)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
@@ -144,12 +155,36 @@ func (v *VotesHandler) DeleteVote(c echo.Context) error {
 	return err
 }
 
-func checkForLegitInput(rate VoteParams) error {
-	if rate.Rate != 1 && rate.Rate != -1 {
-		return errors.New("rate should be 1 or -1")
-	} else if rate.UserId == rate.RatedUserId {
+func checkForLegitInput(voteParams VoteParams) error {
+	if voteParams.Vote != 1 && voteParams.Vote != -1 {
+		return errors.New("vote should be 1 or -1")
+	} else if voteParams.UserId == voteParams.RatedUserId {
 		return errors.New("user can not vote for himself")
 	}
 
 	return nil
+}
+
+func (v *VotesHandler) checkIfUserAlreadyHaveRating(userId int) error {
+	newCheckIfUserHaveRating := rating.NewGetUserRating(v.container.Repository)
+	_, err := newCheckIfUserHaveRating.Execute(userId)
+
+	return err
+}
+
+func (v *VotesHandler) updateUsersRating(userId, userRating int) error {
+	newUpdateRating := rating.NewUpdateUsersRating(v.container.Repository)
+	err := newUpdateRating.Execute(userRating, userId)
+
+	return err
+}
+
+func (v *VotesHandler) createUserRating(userId, vote int) error {
+	newCreateNewRating := rating.NewCreateUserRating(v.container.Repository)
+	err := newCreateNewRating.Execute(rating.UsersRatingAttributes{
+		UserId: userId,
+		Rating: vote,
+	})
+
+	return err
 }

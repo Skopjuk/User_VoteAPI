@@ -45,11 +45,11 @@ type CheckIfUserExists interface {
 }
 
 type AddVoteRecord interface {
-	AddVoteRecord(vote models.Rate) error
+	AddVoteRecord(vote models.Votes) error
 }
 
 type GetAllVotes interface {
-	GetAllVotes() (votesList []models.Rate, err error)
+	GetAllVotes() (votesList []models.Votes, err error)
 }
 
 type GetUsersRate interface {
@@ -61,7 +61,7 @@ type CheckIfUserVotedForSomeUser interface {
 }
 
 type ChangeVote interface {
-	ChangeVote(vote models.Rate, id int) (err error)
+	ChangeVote(vote models.Votes, id int) (err error)
 }
 
 type DeleteVote interface {

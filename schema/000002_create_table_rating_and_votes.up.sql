@@ -1,11 +1,9 @@
-CREATE TABLE IF NOT EXISTS rates
+CREATE TABLE IF NOT EXISTS votes
 (
     id                      serial primary key,
     user_id                 bigint,
     rated_user_id           bigint,
-    username_who_votes      varchar(255) not null,
-    username_for_whom_votes varchar(255) not null,
-    rate                    int,
+    vote                    int,
     created_at              timestamp not null default current_timestamp,
     updated_at              timestamp not null default current_timestamp,
     constraint fk_user_id
@@ -15,3 +13,15 @@ CREATE TABLE IF NOT EXISTS rates
         foreign key(rated_user_id)
             references users(id)
 );
+
+CREATE TABLE IF NOT EXISTS ratings
+(
+    id serial primary key,
+    user_id bigint,
+    rating int,
+    created_at              timestamp not null default current_timestamp,
+    updated_at              timestamp not null default current_timestamp,
+    constraint fk_user_id
+        foreign key(user_id)
+            references users(id)
+)

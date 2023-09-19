@@ -1,10 +1,12 @@
-package user
+package votes
+
+import "userapi/usecases/user"
 
 type CheckIfUserAlreadyVotedForSomebody struct {
-	repository CheckIfUserVotedForSomeUser
+	repository user.CheckIfUserVotedForSomeUser
 }
 
-func NewCheckIfUserAlreadyVotedForSomebody(repository CheckIfUserVotedForSomeUser) *CheckIfUserAlreadyVotedForSomebody {
+func NewCheckIfUserAlreadyVotedForSomebody(repository user.CheckIfUserVotedForSomeUser) *CheckIfUserAlreadyVotedForSomebody {
 	return &CheckIfUserAlreadyVotedForSomebody{repository: repository}
 }
 
