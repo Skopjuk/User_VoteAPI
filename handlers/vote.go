@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	"time"
 	"userapi/repositories"
 	"userapi/usecases/rating"
 	"userapi/usecases/votes"
@@ -32,12 +33,21 @@ func (v *VotesHandler) Vote(c echo.Context) error {
 		})
 	}
 
-	newCheckIfUserAlreadyVoted := votes.NewCheckIfUserAlreadyVotedForSomebody(v.container.Repository)
-	err := newCheckIfUserAlreadyVoted.Execute(input.UserId, input.RatedUserId)
+	newCheckIfUserAlreadyVoted := votes.NewGetVoteByUsersId(v.container.Repository)
+	_, err := newCheckIfUserAlreadyVoted.Execute(input.UserId, input.RatedUserId)
 	if err != nil {
 		logrus.Errorf("user with %d already voted for user with id %d", input.UserId, input.RatedUserId)
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
 			"error": fmt.Sprintf("%s", err),
+		})
+	}
+
+	newOneHourCheck := votes.NewFindLastVote(v.container.Repository)
+	updatedAt, err := newOneHourCheck.Execute(input.UserId)
+	timeDiff := time.Now().Hour() - updatedAt.Hour()
+	if timeDiff < 1 {
+		return c.JSON(http.StatusPreconditionFailed, map[string]interface{}{
+			"error": "you can vote maximum once per hour",
 		})
 	}
 
@@ -133,13 +143,29 @@ func (v *VotesHandler) UpdateVote(c echo.Context) error {
 }
 
 func (v *VotesHandler) DeleteVote(c echo.Context) error {
+	var input votes.DeleteRateAttributes
 	idInt, err := getIdFromEndpoint(c)
 	if err != nil {
 		return err
 	}
 
+	if err := c.Bind(&input); err != nil {
+		logrus.Errorf("failed to bind req body: %s", err)
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error": "error with parsing request body",
+		})
+	}
+
+	newGetVoteByUsersId := votes.NewGetVoteByUsersId(v.container.Repository)
+	vote, _ := newGetVoteByUsersId.Execute(idInt, input.RatedUserId)
+
+	newGetUserRating := rating.NewGetUserRating(v.container.Repository)
+	userRating, err := newGetUserRating.Execute(input.RatedUserId)
+	newRating := userRating - vote
+	err = v.updateUsersRating(input.RatedUserId, newRating)
+
 	newDeleteVote := votes.NewDeleteUsersVote(v.container.Repository)
-	err = newDeleteVote.Execute(idInt)
+	err = newDeleteVote.Execute(idInt, input.RatedUserId)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
 		return c.JSON(http.StatusInternalServerError, err)

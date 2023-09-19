@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"github.com/sirupsen/logrus"
+	"time"
 	"userapi/models"
 )
 
@@ -24,9 +25,9 @@ func (u *UsersRepository) GetRatingByUserId(id int) (rating int, err error) {
 }
 
 func (u *UsersRepository) UpdateUserRating(rating, id int) error {
-	query := "UPDATE ratings SET rating=$1 WHERE user_id=$2"
+	query := "UPDATE ratings SET rating=$1, updated_at=$2 WHERE user_id=$3"
 
-	_, err := u.db.Query(query, rating, id)
+	_, err := u.db.Query(query, rating, time.Now(), id)
 	if err != nil {
 		logrus.Errorf("users rating wasn't updated")
 	}
@@ -34,10 +35,10 @@ func (u *UsersRepository) UpdateUserRating(rating, id int) error {
 	return err
 }
 
-func (u *UsersRepository) DeleteUserRating(id int) error {
-	query := "DELETE FROM ratings WHERE id=$1"
+func (u *UsersRepository) DeleteUserRating(userId int) error {
+	query := "DELETE FROM ratings WHERE user_id=$1"
 
-	_, err := u.db.Query(query, id)
+	_, err := u.db.Query(query, userId)
 	if err != nil {
 		logrus.Errorf("users rating wasn't deleted")
 	}

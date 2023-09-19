@@ -1,6 +1,7 @@
 package user
 
 import (
+	"time"
 	"userapi/models"
 )
 
@@ -56,8 +57,8 @@ type GetUsersRate interface {
 	GetUsersRate(id int) (rate int, err error)
 }
 
-type CheckIfUserVotedForSomeUser interface {
-	CheckIfUserVotedForSomeUser(userWhoVote, userForWhomVote int) (err error)
+type GetVoteByUserIds interface {
+	GetVoteByUserIds(userWhoVote, userForWhomVote int) (vote int, err error)
 }
 
 type ChangeVote interface {
@@ -65,5 +66,9 @@ type ChangeVote interface {
 }
 
 type DeleteVote interface {
-	DeleteVote(id int) (err error)
+	DeleteVote(userId, ratedUserId int) error
+}
+
+type FindUsersVeryLastVote interface {
+	FindUsersVeryLastVote(voterId int) (time time.Time, err error)
 }

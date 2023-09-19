@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"time"
 	"userapi/models"
 )
 
@@ -46,9 +47,9 @@ func (u *UsersRepository) GetUsersRate(id int) (vote int, err error) {
 	return vote, err
 }
 
-func (u *UsersRepository) DeleteVote(id int) error {
-	query := "DELETE FROM votes WHERE id=$1"
-	_, err := u.db.Query(query, id)
+func (u *UsersRepository) DeleteVote(userId, ratedUserId int) error {
+	query := "DELETE FROM votes WHERE user_id=$1 AND rated_user_id=$2"
+	_, err := u.db.Query(query, userId, ratedUserId)
 	if err != nil {
 		logrus.Errorf("qwery for deleting vote can not be executed")
 	}
@@ -56,15 +57,24 @@ func (u *UsersRepository) DeleteVote(id int) error {
 	return err
 }
 
-func (u *UsersRepository) CheckIfUserVotedForSomeUser(userWhoVote, userForWhomVote int) (err error) {
-	var row models.Votes
-	query := "SELECT * FROM votes WHERE user_id=$1 AND rated_user_id=$2 LIMIT 1"
-	err = u.db.Get(&row, query, userWhoVote, userForWhomVote)
+func (u *UsersRepository) GetVoteByUserIds(userWhoVote, userForWhomVote int) (vote int, err error) {
+	query := "SELECT vote FROM votes WHERE user_id=$1 AND rated_user_id=$2 LIMIT 1"
+	err = u.db.Get(&vote, query, userWhoVote, userForWhomVote)
 	if err == nil {
 		newErr := fmt.Sprintf("user with id %d already voted for user with id %d", userWhoVote, userForWhomVote)
 		logrus.Errorf(newErr)
-		return errors.New(newErr)
+		return vote, errors.New(newErr)
 	}
 
-	return nil
+	return vote, nil
+}
+
+func (u *UsersRepository) FindUsersVeryLastVote(voterId int) (updatedAt time.Time, err error) {
+	query := "SELECT updated_at FROM votes WHERE user_id=$1 ORDER BY updated_at DESC LIMIT 1"
+	err = u.db.Get(&updatedAt, query, voterId)
+	if err != nil {
+		logrus.Errorf("record for user with id %d wasn't find: %s", voterId, err)
+	}
+
+	return updatedAt, err
 }
