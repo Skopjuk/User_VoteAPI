@@ -15,7 +15,7 @@ func (r *RatingHandler) GetRatingByUserId(c echo.Context) error {
 		})
 	}
 
-	newGetUserRatingById := rating.NewGetUserRating(r.container.Repository)
+	newGetUserRatingById := rating.NewGetUserRating(r.container.RatingRepository)
 	userRating, err := newGetUserRatingById.Execute(idInt)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)

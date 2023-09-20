@@ -41,10 +41,6 @@ type CountUsers interface {
 	CountUsers() (numberOfUsers int, err error)
 }
 
-type CheckIfUserExists interface {
-	CheckIfUserExist(id int) error
-}
-
 type AddVoteRecord interface {
 	AddVoteRecord(vote models.Votes) error
 }
@@ -71,4 +67,8 @@ type DeleteVote interface {
 
 type FindUsersVeryLastVote interface {
 	FindUsersVeryLastVote(voterId int) (time time.Time, err error)
+}
+
+type CheckIfUserHaveRecord interface {
+	CheckIfUserHaveRecord(userId int) error
 }

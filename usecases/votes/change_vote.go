@@ -10,7 +10,7 @@ type ChangeUsersVote struct {
 	changeVote user.ChangeVote
 }
 
-func NewChangeRate(changeVote user.ChangeVote) *ChangeUsersVote {
+func NewChangeVote(changeVote user.ChangeVote) *ChangeUsersVote {
 	return &ChangeUsersVote{changeVote: changeVote}
 }
 

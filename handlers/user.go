@@ -45,7 +45,7 @@ func (a *AccountHandler) UpdateUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	newGetUserById := user.NewGetUserByID(a.container.Repository)
+	newGetUserById := user.NewGetUserByID(a.container.UsersRepository)
 	_, err = newGetUserById.Execute(idInt)
 	if err != nil {
 		logrus.Errorf("user with id %d wasn't find", idInt)
@@ -55,7 +55,7 @@ func (a *AccountHandler) UpdateUser(c echo.Context) error {
 		return err
 	}
 
-	newUpdateProfile := user.NewChangeProfile(a.container.Repository)
+	newUpdateProfile := user.NewChangeProfile(a.container.UsersRepository)
 	err = newUpdateProfile.Execute(input, idInt)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
@@ -89,7 +89,7 @@ func (u *UsersHandler) GetAll(c echo.Context) error {
 
 	skip := strconv.Itoa((page - 1) * 10)
 
-	newGetUsers := user.NewGetAllUsers(u.container.Repository)
+	newGetUsers := user.NewGetAllUsers(u.container.UsersRepository)
 	users, err := newGetUsers.Execute(skip, paginationLimit)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
@@ -121,7 +121,7 @@ func (u *UsersHandler) GetUserById(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	newGetUserById := user.NewGetUserByID(u.container.Repository)
+	newGetUserById := user.NewGetUserByID(u.container.UsersRepository)
 	user, err := newGetUserById.Execute(idInt)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
@@ -140,7 +140,7 @@ func (u *UsersHandler) GetUserById(c echo.Context) error {
 }
 
 func (u *UsersHandler) GerNumberOfUsers(c echo.Context) error {
-	newGetUserById := user.NewCountAllUsers(u.container.Repository)
+	newGetUserById := user.NewCountAllUsers(u.container.UsersRepository)
 	numOfUsers, err := newGetUserById.Execute()
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
@@ -169,7 +169,7 @@ func (a *AccountHandler) ChangePassword(c echo.Context) error {
 		return err
 	}
 
-	newGetUserById := user.NewGetUserByID(a.container.Repository)
+	newGetUserById := user.NewGetUserByID(a.container.UsersRepository)
 	_, err = newGetUserById.Execute(idInt)
 	if err != nil {
 		logrus.Errorf("user with id %d wasn't find", idInt)
@@ -188,7 +188,7 @@ func (a *AccountHandler) ChangePassword(c echo.Context) error {
 		Password: input.Password,
 	}
 
-	newChangePassword := user.NewChangePassword(a.container.Repository)
+	newChangePassword := user.NewChangePassword(a.container.UsersRepository)
 	err = newChangePassword.Execute(idInt, params)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
@@ -211,7 +211,7 @@ func (a *AccountHandler) DeleteUser(c echo.Context) error {
 		return err
 	}
 
-	newGetUserById := user.NewGetUserByID(a.container.Repository)
+	newGetUserById := user.NewGetUserByID(a.container.UsersRepository)
 	_, err = newGetUserById.Execute(idInt)
 	if err != nil {
 		logrus.Errorf("user with id %d wasn't find", idInt)
@@ -221,7 +221,7 @@ func (a *AccountHandler) DeleteUser(c echo.Context) error {
 		return err
 	}
 
-	newDeleteUser := user.NewDeleteProfile(a.container.Repository)
+	newDeleteUser := user.NewDeleteProfile(a.container.UsersRepository)
 	err = newDeleteUser.Execute(idInt)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
