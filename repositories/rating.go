@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"errors"
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
 	"time"
@@ -28,6 +29,7 @@ func (u *RatingRepository) GetRatingByUserId(id int) (rating int, err error) {
 	err = u.db.Get(&rating, query, id)
 	if err != nil {
 		logrus.Errorf("users rating wasn't find")
+		return 0, errors.New("users rating wasn't find")
 	}
 
 	return rating, err

@@ -43,24 +43,14 @@ func (v *VotesHandler) Vote(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 
-	err = v.checkIfUserAlreadyHaveRating(input.RatedUserId)
-	if err != nil {
-		err = v.createUserRating(input.RatedUserId, input.Vote)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
-				"error": "error while listing users rating",
-			})
-		}
-	} else {
-		newGetUserRating := rating.NewGetUserRating(v.container.RatingRepository)
-		userRating, err := newGetUserRating.Execute(input.RatedUserId)
-		newRating := userRating + input.Vote
+	newCreateRating := rating.NewCreateUserRating(v.container.RatingRepository)
+	newUpdateRating := rating.NewUpdateUsersRating(v.container.RatingRepository)
+	newGetUserRating := rating.NewGetUserRating(v.container.RatingRepository)
 
-		err = v.updateUsersRating(input.RatedUserId, newRating)
-		if err != nil {
-			logrus.Errorf("Error while updating users rating: %s", err)
-			return c.JSON(http.StatusInternalServerError, err.Error())
-		}
+	newCreatingOrUpdatingRating := rating.NewCreatingOrUpdatingRating(newCreateRating, newUpdateRating, newGetUserRating)
+	_, err = newCreatingOrUpdatingRating.Execute(input.UserId, input.RatedUserId, input.Vote)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
 	}
 
 	err = c.JSON(http.StatusOK, map[string]interface{}{
@@ -87,13 +77,6 @@ func (v *VotesHandler) GetAllVotes(c echo.Context) error {
 func (v *VotesHandler) UpdateVote(c echo.Context) error {
 	var input votes.ChangeRateAttributes
 
-	idInt, err := getIdFromEndpoint(c)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			"error": fmt.Sprintf("id %d can not be parsed", idInt),
-		})
-	}
-
 	if err := c.Bind(&input); err != nil {
 		logrus.Errorf("failed to bind req body: %s", err)
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
@@ -102,7 +85,7 @@ func (v *VotesHandler) UpdateVote(c echo.Context) error {
 	}
 
 	newChangeVote := votes.NewChangeVote(v.container.VotesRepository)
-	err = newChangeVote.Execute(input, idInt)
+	err := newChangeVote.Execute(input)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
@@ -122,10 +105,6 @@ func (v *VotesHandler) UpdateVote(c echo.Context) error {
 
 func (v *VotesHandler) DeleteVote(c echo.Context) error {
 	var input votes.DeleteRateAttributes
-	idInt, err := getIdFromEndpoint(c)
-	if err != nil {
-		return err
-	}
 
 	if err := c.Bind(&input); err != nil {
 		logrus.Errorf("failed to bind req body: %s", err)
@@ -135,7 +114,7 @@ func (v *VotesHandler) DeleteVote(c echo.Context) error {
 	}
 
 	newGetVoteByUsersId := votes.NewGetVoteByUsersId(v.container.VotesRepository)
-	vote, _ := newGetVoteByUsersId.Execute(idInt, input.RatedUserId)
+	vote, _ := newGetVoteByUsersId.Execute(input.UserId, input.RatedUserId)
 
 	newGetUserRating := rating.NewGetUserRating(v.container.RatingRepository)
 	userRating, err := newGetUserRating.Execute(input.RatedUserId)
@@ -143,7 +122,7 @@ func (v *VotesHandler) DeleteVote(c echo.Context) error {
 	err = v.updateUsersRating(input.RatedUserId, newRating)
 
 	newDeleteVote := votes.NewDeleteUsersVote(v.container.VotesRepository)
-	err = newDeleteVote.Execute(idInt, input.RatedUserId)
+	err = newDeleteVote.Execute(input.UserId, input.RatedUserId)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
 		return c.JSON(http.StatusInternalServerError, err)
@@ -169,26 +148,9 @@ func checkForLegitInput(voteParams VoteParams) error {
 	return nil
 }
 
-func (v *VotesHandler) checkIfUserAlreadyHaveRating(userId int) error {
-	newCheckIfUserHaveRating := rating.NewGetUserRating(v.container.RatingRepository)
-	_, err := newCheckIfUserHaveRating.Execute(userId)
-
-	return err
-}
-
 func (v *VotesHandler) updateUsersRating(userId, userRating int) error {
 	newUpdateRating := rating.NewUpdateUsersRating(v.container.RatingRepository)
 	err := newUpdateRating.Execute(userRating, userId)
-
-	return err
-}
-
-func (v *VotesHandler) createUserRating(userId, vote int) error {
-	newCreateNewRating := rating.NewCreateUserRating(v.container.RatingRepository)
-	err := newCreateNewRating.Execute(rating.UsersRatingAttributes{
-		UserId: userId,
-		Rating: vote,
-	})
 
 	return err
 }

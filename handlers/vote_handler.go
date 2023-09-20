@@ -16,6 +16,6 @@ func NewVotesHandler(container *container.Container) *VotesHandler {
 func (v *VotesHandler) SetRoutes(g *echo.Group) {
 	g.POST("/", v.Vote)
 	g.GET("/", v.GetAllVotes)
-	g.PUT("/:id/change_vote", v.UpdateVote)
-	g.DELETE("/:id", v.DeleteVote)
+	g.PUT("/", v.UpdateVote)
+	g.DELETE("/", v.DeleteVote)
 }

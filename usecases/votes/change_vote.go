@@ -20,11 +20,11 @@ type ChangeRateAttributes struct {
 	Vote        int `json:"vote"`
 }
 
-func (c *ChangeUsersVote) Execute(attributes ChangeRateAttributes, id int) error {
+func (c *ChangeUsersVote) Execute(attributes ChangeRateAttributes) error {
 	return c.changeVote.ChangeVote(models.Votes{
 		UserId:      attributes.UserId,
 		RatedUserId: attributes.RatedUserId,
 		Vote:        attributes.Vote,
 		UpdatedAt:   time.Now(),
-	}, id)
+	})
 }

@@ -7,6 +7,7 @@ type DeleteUsersVote struct {
 }
 
 type DeleteRateAttributes struct {
+	UserId      int `json:"user_id"`
 	RatedUserId int `json:"rated_user_id"`
 }
 

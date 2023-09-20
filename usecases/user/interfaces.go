@@ -58,7 +58,7 @@ type GetVoteByUserIds interface {
 }
 
 type ChangeVote interface {
-	ChangeVote(vote models.Votes, id int) (err error)
+	ChangeVote(vote models.Votes) (err error)
 }
 
 type DeleteVote interface {
