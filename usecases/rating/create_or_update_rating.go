@@ -1,16 +1,16 @@
 package rating
 
-type CreatingOrUpdatingRating struct {
+type CreateOrUpdateRating struct {
 	createUserRating *CreateUserRating
 	updateRating     *UpdateUsersRating
 	getUsersRating   *GetUserRating
 }
 
-func NewCreatingOrUpdatingRating(createUserRating *CreateUserRating, updateRating *UpdateUsersRating, getUsersRating *GetUserRating) *CreatingOrUpdatingRating {
-	return &CreatingOrUpdatingRating{createUserRating: createUserRating, updateRating: updateRating, getUsersRating: getUsersRating}
+func NewCreateOrUpdateRating(createUserRating *CreateUserRating, updateRating *UpdateUsersRating, getUsersRating *GetUserRating) *CreateOrUpdateRating {
+	return &CreateOrUpdateRating{createUserRating: createUserRating, updateRating: updateRating, getUsersRating: getUsersRating}
 }
 
-func (c *CreatingOrUpdatingRating) Execute(userId, ratedUserId, vote int) (newRating int, err error) {
+func (c *CreateOrUpdateRating) Execute(ratedUserId, vote int) (newRating int, err error) {
 	rating, err := c.getUsersRating.Execute(ratedUserId)
 	if err != nil {
 		err := c.createUserRating.Execute(UsersRatingAttributes{

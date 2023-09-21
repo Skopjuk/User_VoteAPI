@@ -47,8 +47,8 @@ func (v *VotesHandler) Vote(c echo.Context) error {
 	newUpdateRating := rating.NewUpdateUsersRating(v.container.RatingRepository)
 	newGetUserRating := rating.NewGetUserRating(v.container.RatingRepository)
 
-	newCreatingOrUpdatingRating := rating.NewCreatingOrUpdatingRating(newCreateRating, newUpdateRating, newGetUserRating)
-	_, err = newCreatingOrUpdatingRating.Execute(input.UserId, input.RatedUserId, input.Vote)
+	newCreatingOrUpdatingRating := rating.NewCreateOrUpdateRating(newCreateRating, newUpdateRating, newGetUserRating)
+	_, err = newCreatingOrUpdatingRating.Execute(input.RatedUserId, input.Vote)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}

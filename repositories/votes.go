@@ -27,8 +27,8 @@ func (u *VotesRepository) AddVoteRecord(vote models.Votes) error {
 }
 
 func (u *VotesRepository) ChangeVote(vote models.Votes) (err error) {
-	query := "UPDATE votes SET rated_user_id=$1, vote=$2 WHERE user_id=$3"
-	_, err = u.db.Query(query, vote.RatedUserId, vote.Vote, vote.UserId)
+	query := "UPDATE votes SET vote=$1 WHERE user_id=$2 AND rated_user_id=$3"
+	_, err = u.db.Query(query, vote.Vote, vote.UserId, vote.RatedUserId)
 	if err != nil {
 		logrus.Errorf("problem with query while updating user: %s", err)
 	}
@@ -69,6 +69,11 @@ func (u *VotesRepository) DeleteVote(userId, ratedUserId int) error {
 func (u *VotesRepository) GetVoteByUserIds(userWhoVote, userForWhomVote int) (vote int, err error) {
 	query := "SELECT vote FROM votes WHERE user_id=$1 AND rated_user_id=$2 LIMIT 1"
 	err = u.db.Get(&vote, query, userWhoVote, userForWhomVote)
+	if err != nil {
+		logrus.Errorf("error while requesting vote from DB")
+		return 0, err
+	}
+
 	if vote != 0 {
 		newErr := fmt.Sprintf("user with id %d already voted for user with id %d", userWhoVote, userForWhomVote)
 		logrus.Errorf(newErr)

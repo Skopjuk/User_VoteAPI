@@ -34,10 +34,9 @@ func (a *AccountHandler) UpdateUser(c echo.Context) error {
 
 	idInt, err := getIdFromEndpoint(c)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]interface{}{
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error": fmt.Sprintf("users id %d can not be parsed", idInt),
 		})
-		return err
 	}
 
 	if err := c.Bind(&input); err != nil {
@@ -48,21 +47,19 @@ func (a *AccountHandler) UpdateUser(c echo.Context) error {
 	newGetUserById := user.NewGetUserByID(a.container.UsersRepository)
 	_, err = newGetUserById.Execute(idInt)
 	if err != nil {
-		logrus.Errorf("user with id %d wasn't find", idInt)
-		c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			"error": fmt.Sprintf("user with id %d wasn't find", idInt),
+		logrus.Errorf("problem wile inserting user: %s", err)
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": fmt.Sprintf("problem wile inserting user: %s", err),
 		})
-		return err
 	}
 
 	newUpdateProfile := user.NewChangeProfile(a.container.UsersRepository)
 	err = newUpdateProfile.Execute(input, idInt)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
-		c.JSON(http.StatusInternalServerError, map[string]interface{}{
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error": err.Error(),
 		})
-		return err
 	}
 
 	err = c.JSON(http.StatusOK, map[string]interface{}{
@@ -93,7 +90,7 @@ func (u *UsersHandler) GetAll(c echo.Context) error {
 	users, err := newGetUsers.Execute(skip, paginationLimit)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
-		c.JSON(http.StatusInternalServerError, map[string]interface{}{
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error": "error while parsing url",
 		})
 	}
@@ -108,10 +105,9 @@ func (u *UsersHandler) GetAll(c echo.Context) error {
 func (u *UsersHandler) GetUserById(c echo.Context) error {
 	idInt, err := getIdFromEndpoint(c)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]interface{}{
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error": fmt.Sprintf("users id %d can not be parsed", idInt),
 		})
-		return err
 	}
 
 	input := models.User{}
@@ -125,8 +121,7 @@ func (u *UsersHandler) GetUserById(c echo.Context) error {
 	user, err := newGetUserById.Execute(idInt)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
-		c.JSON(http.StatusInternalServerError, err)
-		return err
+		return c.JSON(http.StatusInternalServerError, err)
 	}
 
 	err = c.JSON(http.StatusOK, map[string]interface{}{
@@ -144,8 +139,7 @@ func (u *UsersHandler) GerNumberOfUsers(c echo.Context) error {
 	numOfUsers, err := newGetUserById.Execute()
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
-		c.JSON(http.StatusInternalServerError, err)
-		return err
+		return c.JSON(http.StatusInternalServerError, err)
 	}
 
 	err = c.JSON(http.StatusOK, map[string]interface{}{
@@ -163,24 +157,22 @@ func (a *AccountHandler) ChangePassword(c echo.Context) error {
 
 	idInt, err := getIdFromEndpoint(c)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]interface{}{
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error": fmt.Sprintf("users id %d can not be parsed", idInt),
 		})
-		return err
 	}
 
 	newGetUserById := user.NewGetUserByID(a.container.UsersRepository)
 	_, err = newGetUserById.Execute(idInt)
 	if err != nil {
-		logrus.Errorf("user with id %d wasn't find", idInt)
-		c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			"error": fmt.Sprintf("user with id %d wasn't find", idInt),
+		logrus.Errorf("problem wile inserting user: %s", err)
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": fmt.Sprintf("problem wile inserting user: %s", err),
 		})
-		return err
 	}
 
 	if err := c.Bind(&input); err != nil {
-		a.container.Logging.Errorf("failedd to bind req body: %s", err)
+		a.container.Logging.Errorf("failed to bind req body: %s", err)
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
@@ -192,8 +184,7 @@ func (a *AccountHandler) ChangePassword(c echo.Context) error {
 	err = newChangePassword.Execute(idInt, params)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
-		c.JSON(http.StatusInternalServerError, err)
-		return err
+		return c.JSON(http.StatusInternalServerError, err)
 	}
 	err = c.JSON(http.StatusOK, map[string]interface{}{
 		"status_password_changing": "changed",
@@ -214,19 +205,17 @@ func (a *AccountHandler) DeleteUser(c echo.Context) error {
 	newGetUserById := user.NewGetUserByID(a.container.UsersRepository)
 	_, err = newGetUserById.Execute(idInt)
 	if err != nil {
-		logrus.Errorf("user with id %d wasn't find", idInt)
-		c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			"error": fmt.Sprintf("user with id %d wasn't find", idInt),
+		logrus.Errorf("problem wile inserting user: %s", err)
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": fmt.Sprintf("problem wile inserting user: %s", err),
 		})
-		return err
 	}
 
 	newDeleteUser := user.NewDeleteProfile(a.container.UsersRepository)
 	err = newDeleteUser.Execute(idInt)
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
-		c.JSON(http.StatusInternalServerError, err)
-		return err
+		return c.JSON(http.StatusInternalServerError, err)
 	}
 	err = c.JSON(http.StatusOK, map[string]interface{}{
 		"status_deleting_user": "deleted",
