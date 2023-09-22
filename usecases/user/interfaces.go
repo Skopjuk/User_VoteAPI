@@ -1,6 +1,7 @@
 package user
 
 import (
+	"time"
 	"userapi/models"
 )
 
@@ -40,6 +41,34 @@ type CountUsers interface {
 	CountUsers() (numberOfUsers int, err error)
 }
 
-type CheckIfUserExists interface {
-	CheckIfUserExist(id int) error
+type AddVoteRecord interface {
+	AddVoteRecord(vote models.Votes) error
+}
+
+type GetAllVotes interface {
+	GetAllVotes() (votesList []models.Votes, err error)
+}
+
+type GetUsersRate interface {
+	GetUsersRate(id int) (rate int, err error)
+}
+
+type GetVoteByUserIds interface {
+	GetVoteByUserIds(userWhoVote, userForWhomVote int) (vote int, err error)
+}
+
+type ChangeVote interface {
+	ChangeVote(vote models.Votes) (err error)
+}
+
+type DeleteVote interface {
+	DeleteVote(userId, ratedUserId int) error
+}
+
+type FindUsersVeryLastVote interface {
+	FindUsersVeryLastVote(voterId int) (time time.Time, err error)
+}
+
+type CheckIfUserHaveRecord interface {
+	CheckIfUserHaveRecord(userId int) error
 }

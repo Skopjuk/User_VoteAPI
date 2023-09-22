@@ -8,10 +8,12 @@ import (
 )
 
 type Container struct {
-	Config     configs.Config
-	DB         *sqlx.DB
-	Logging    *logrus.Logger
-	Repository *repositories.UsersRepository
+	Config           configs.Config
+	DB               *sqlx.DB
+	Logging          *logrus.Logger
+	UsersRepository  *repositories.UsersRepository
+	RatingRepository *repositories.RatingRepository
+	VotesRepository  *repositories.VotesRepository
 }
 
 func NewContainer(config configs.Config, logging *logrus.Logger) *Container {
@@ -22,8 +24,10 @@ func NewContainer(config configs.Config, logging *logrus.Logger) *Container {
 	}
 
 	return &Container{Config: config,
-		DB:         db,
-		Logging:    logging,
-		Repository: repositories.NewUsersRepository(db),
+		DB:               db,
+		Logging:          logging,
+		UsersRepository:  repositories.NewUsersRepository(db),
+		RatingRepository: repositories.NewRatingRepository(db),
+		VotesRepository:  repositories.NewVotesRepository(db),
 	}
 }

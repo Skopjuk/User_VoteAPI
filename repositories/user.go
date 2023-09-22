@@ -3,7 +3,6 @@ package repositories
 import (
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
-	//	"userapi"
 	"userapi/models"
 )
 
@@ -17,9 +16,14 @@ func NewUsersRepository(db *sqlx.DB) *UsersRepository {
 
 func (u *UsersRepository) InsertUser(user models.User) (id int, err error) {
 	query := "INSERT INTO users (username, password, first_name, last_name, role) values ($1, $2, $3, $4, $5) RETURNING id"
-	row := u.db.QueryRow(query, user.Username, user.Password, user.FirstName, user.LastName, user.Role)
+	row, err := u.db.Query(query, user.Username, user.Password, user.FirstName, user.LastName, user.Role)
+	if err != nil {
+		logrus.Errorf("error while inserting user")
+		return 0, err
+	}
+
 	if err = row.Scan(&id); err != nil {
-		logrus.Errorf("user with id %s wasn't found", id)
+		logrus.Errorf("error while getting id of new user, id")
 	}
 
 	return id, err

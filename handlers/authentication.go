@@ -57,16 +57,13 @@ func (u *UsersHandler) SignUp(c echo.Context) error {
 	if err != nil {
 		log.Errorf("cannot execute usecase: %s", err.Error())
 		if strings.Contains(err.Error(), "duplicate key value") {
-			c.JSON(http.StatusBadRequest, map[string]interface{}{
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
 				"error": "this user already exist",
 			})
-		} else {
-			c.JSON(http.StatusBadRequest, map[string]interface{}{
-				"error": err.Error(),
-			})
 		}
-
-		return err
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error": err.Error(),
+		})
 	}
 
 	err = c.JSON(http.StatusOK, map[string]interface{}{
