@@ -16,6 +16,6 @@ func NewUsersHandler(container *container.Container) *UsersHandler {
 func (u *UsersHandler) SetRoutes(g *echo.Group) {
 	g.GET("/", u.GetAll)
 	g.GET("/:id", u.GetUserById)
-	g.GET("/count", u.GerNumberOfUsers)
+	g.GET("/count", u.GetNumberOfUsers)
 	g.POST("/", u.SignUp)
 }

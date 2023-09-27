@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
+	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"time"
@@ -30,21 +31,37 @@ func (l *LoginHandler) SignIn(c echo.Context) error {
 		Password: input.Password,
 	}
 
-	token, err := l.GenerateToken(params.Username, params.Password)
-	if err != nil {
-		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
-			"message": "user do not exist",
-		})
-	}
+	tokenRedis, err := l.container.RedisDb.Client.Get(l.container.Context, "users_token").Result()
+	if err == redis.Nil {
+		token, err := l.GenerateToken(params.Username, params.Password)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{
+				"message": "user do not exist",
+			})
+		}
 
-	err = c.JSON(http.StatusOK, map[string]interface{}{
-		"token": token,
-	})
-	if err != nil {
-		logrus.Errorf("troubles with sending http status: %s", err)
-		err = c.JSON(http.StatusInternalServerError, map[string]interface{}{
+		err = c.JSON(http.StatusOK, map[string]interface{}{
 			"token": token,
 		})
+		if err != nil {
+			logrus.Errorf("troubles with sending http status: %s", err)
+			err = c.JSON(http.StatusInternalServerError, err)
+		}
+		l.container.RedisDb.Client.Set(l.container.Context, "users_token", token, 0)
+		_, err = l.container.RedisDb.Client.Expire(l.container.Context, "users_token", 1*time.Minute).Result()
+		if err != nil {
+			logrus.Errorf("error while set expirational perion")
+		}
+	} else if err != nil {
+		logrus.Errorf("error while attempt to recive data about users rating")
+	} else {
+		logrus.Info("data about users token exists in redis")
+		err = c.JSON(http.StatusOK, map[string]interface{}{
+			"token": tokenRedis,
+		})
+		if err != nil {
+			logrus.Errorf("troubles with sending http status: %s", err)
+		}
 	}
 
 	return err

@@ -1,9 +1,0 @@
-services:
-  postgres:
-    image: postgres:13.3
-    container_name: userAPI
-    environment:
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "qwerty"
-    ports:
-      - "5432:5432"

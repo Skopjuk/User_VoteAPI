@@ -11,6 +11,8 @@ type Config struct {
 	DBName     string
 	SSLMode    string
 	SigningKey string
+	RedisPort  string
+	RedisHost  string
 }
 
 func NewConfig() (Config, error) {
@@ -27,5 +29,7 @@ func NewConfig() (Config, error) {
 		DBName:     viper.GetString("db.dbname"),
 		SSLMode:    viper.GetString("db.sslmode"),
 		SigningKey: viper.GetString("signingKey"),
+		RedisPort:  viper.GetString("redis_db.port"),
+		RedisHost:  viper.GetString("redis_db.host"),
 	}, err
 }

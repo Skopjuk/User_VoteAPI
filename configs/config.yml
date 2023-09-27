@@ -8,3 +8,6 @@ db:
   password: "qwerty"
   dbname: "users"
   sslmode: "disable"
+redis_db:
+  host: "localhost"
+  port: "6379"
