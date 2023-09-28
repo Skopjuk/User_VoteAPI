@@ -23,8 +23,15 @@ func (r *RatingHandler) GetRatingByUserId(c echo.Context) error {
 
 	if ratingRedis != "" {
 		logrus.Info("data about users list exists in redis")
+
+		ratingInt, err := strconv.Atoi(ratingRedis)
+		if err != nil {
+			logrus.Errorf("error while converting rating to int")
+			return c.JSON(http.StatusInternalServerError, err)
+		}
+
 		return c.JSON(http.StatusOK, map[string]interface{}{
-			"users_rating": ratingRedis,
+			"rating": ratingInt,
 		})
 	}
 	newGetUserRatingById := rating.NewGetUserRating(r.container.RatingRepository)

@@ -179,7 +179,7 @@ func (u *UsersHandler) GetNumberOfUsers(c echo.Context) error {
 		usersNumRedisStr, err := strconv.Atoi(usersNumRedis)
 		if err != nil {
 			logrus.Errorf("error while converting amount of users to string: %s", err)
-			return err
+			return c.JSON(http.StatusInternalServerError, err)
 		}
 
 		return c.JSON(http.StatusOK, map[string]interface{}{
