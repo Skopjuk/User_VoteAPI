@@ -1,6 +1,11 @@
 package configs
 
-import "github.com/spf13/viper"
+import (
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+	"strconv"
+	"time"
+)
 
 type Config struct {
 	Port       string
@@ -13,12 +18,17 @@ type Config struct {
 	SigningKey string
 	RedisPort  string
 	RedisHost  string
+	ExpTime    time.Duration
 }
 
 func NewConfig() (Config, error) {
 	viper.AddConfigPath("configs")
 	viper.SetConfigName("config")
 	err := viper.ReadInConfig()
+	expTime, err := strconv.Atoi(viper.GetString("redis_db.exp_time"))
+	if err != nil {
+		logrus.Errorf("error while parsing exp time from config:%s", err)
+	}
 
 	return Config{
 		Port:       viper.GetString("port"),
@@ -31,5 +41,6 @@ func NewConfig() (Config, error) {
 		SigningKey: viper.GetString("signingKey"),
 		RedisPort:  viper.GetString("redis_db.port"),
 		RedisHost:  viper.GetString("redis_db.host"),
+		ExpTime:    time.Duration(expTime),
 	}, err
 }

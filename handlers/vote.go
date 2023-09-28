@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
-	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"time"
@@ -67,39 +66,8 @@ func (v *VotesHandler) GetAllVotes(c echo.Context) error {
 	var input []models.Votes
 	newGetVotes := votes.NewGetListOfVotes(v.container.VotesRepository)
 
-	redisVotes, err := v.container.RedisDb.Client.Get(v.container.Context, "votes").Result()
-	if err == redis.Nil {
-		logrus.Info("in redis no data about all votes. Request to Postrgres")
-		votes, err := newGetVotes.Execute()
-		if err != nil {
-			logrus.Errorf("can not execute usecase: %s", err)
-			c.JSON(http.StatusInternalServerError, "")
-		}
-
-		var votesList []models.Votes
-		for _, i := range votes {
-			foundVote := i
-			votesList = append(votesList, foundVote)
-		}
-
-		data, err := json.Marshal(votesList)
-		if err != nil {
-			logrus.Errorf("error while marshaling votes list")
-		}
-
-		v.container.RedisDb.Client.Set(v.container.Context, "votes", data, 0)
-		_, err = v.container.RedisDb.Client.Expire(v.container.Context, "votes", 1*time.Minute).Result()
-		if err != nil {
-			logrus.Errorf("error while set expirational period")
-		}
-
-		err = c.JSON(http.StatusOK, map[string]interface{}{
-			"votes": votes,
-		})
-		return err
-	} else if err != nil {
-		logrus.Errorf("error while attempt to recive data about users vote")
-	} else {
+	redisVotes, err := v.container.RedisDb.Get(c.Request().Context(), "votes").Result()
+	if redisVotes != "" {
 		logrus.Info("data about all votes list exists in redis")
 		if err := json.Unmarshal([]byte(redisVotes), &input); err != nil {
 			logrus.Errorf("failed to bind req body: %s", err)
@@ -111,7 +79,32 @@ func (v *VotesHandler) GetAllVotes(c echo.Context) error {
 		if err != nil {
 			logrus.Errorf("troubles with sending http status: %s", err)
 		}
+		return err
 	}
+
+	logrus.Info("in redis no data about all votes. Request to Postrgres")
+	votes, err := newGetVotes.Execute()
+	if err != nil {
+		logrus.Errorf("can not execute usecase: %s", err)
+		c.JSON(http.StatusInternalServerError, "")
+	}
+
+	var votesList []models.Votes
+	for _, i := range votes {
+		foundVote := i
+		votesList = append(votesList, foundVote)
+	}
+
+	data, err := json.Marshal(votesList)
+	if err != nil {
+		logrus.Errorf("error while marshaling votes list:%s", err)
+	}
+	v.container.RedisDb.Set(c.Request().Context(), "votes", data, v.container.Config.ExpTime)
+
+	err = c.JSON(http.StatusOK, map[string]interface{}{
+		"votes": votes,
+	})
+
 	return err
 }
 

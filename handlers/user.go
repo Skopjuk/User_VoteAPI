@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/labstack/echo/v4"
-	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
@@ -90,44 +89,8 @@ func (u *UsersHandler) GetAll(c echo.Context) error {
 
 	skip := strconv.Itoa((page - 1) * 10)
 
-	val, err := u.container.RedisDb.Client.Get(u.container.Context, "users").Result()
-	if err == redis.Nil {
-		logrus.Info("in redis no data about all users. Request to Postrgres")
-		newGetUsers := user.NewGetAllUsers(u.container.UsersRepository)
-		users, err := newGetUsers.Execute(skip, paginationLimit)
-		if err != nil {
-			logrus.Errorf("can not execute usecase: %s", err)
-			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
-				"error": "error while parsing url",
-			})
-		}
-
-		var usersList []models.User
-		for _, i := range users {
-			foundUser := i
-			usersList = append(usersList, foundUser)
-		}
-
-		data, err := json.Marshal(usersList)
-		if err != nil {
-			logrus.Errorf("error while marshaling users list")
-		}
-
-		u.container.RedisDb.Client.Set(u.container.Context, "users", data, 0)
-		_, err = u.container.RedisDb.Client.Expire(u.container.Context, "users", 1*time.Minute).Result()
-		if err != nil {
-			logrus.Errorf("error while set expirational period")
-		}
-
-		err = c.JSON(http.StatusOK, map[string]interface{}{
-			"user": users,
-		})
-		if err != nil {
-			logrus.Errorf("troubles with sending http status: %s", err)
-		}
-	} else if err != nil {
-		logrus.Errorf("error while attempt to recive data about users rating")
-	} else {
+	val, err := u.container.RedisDb.Get(c.Request().Context(), "users").Result()
+	if val != "" {
 		logrus.Info("data about users list exists in redis")
 		if err := json.Unmarshal([]byte(val), &input); err != nil {
 			logrus.Errorf("failed to bind req body: %s", err)
@@ -139,6 +102,39 @@ func (u *UsersHandler) GetAll(c echo.Context) error {
 		if err != nil {
 			logrus.Errorf("troubles with sending http status: %s", err)
 		}
+
+		return err
+	}
+
+	logrus.Info("in redis no data about all users. Request to Postrgres")
+	newGetUsers := user.NewGetAllUsers(u.container.UsersRepository)
+	users, err := newGetUsers.Execute(skip, paginationLimit)
+	if err != nil {
+		logrus.Errorf("can not execute usecase: %s", err)
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": "error while parsing url",
+		})
+	}
+
+	var usersList []models.User
+	for _, i := range users {
+		foundUser := i
+		usersList = append(usersList, foundUser)
+	}
+
+	data, err := json.Marshal(usersList)
+	if err != nil {
+		logrus.Errorf("error while marshaling users list")
+	}
+
+	u.container.RedisDb.Set(c.Request().Context(), "users", data, u.container.Config.ExpTime)
+	_, err = u.container.RedisDb.Expire(c.Request().Context(), "users", 1*time.Minute).Result()
+
+	err = c.JSON(http.StatusOK, map[string]interface{}{
+		"user": users,
+	})
+	if err != nil {
+		logrus.Errorf("troubles with sending http status: %s", err)
 	}
 
 	return err
@@ -155,34 +151,10 @@ func (u *UsersHandler) GetUserById(c echo.Context) error {
 
 	keyForRedis := "user_by_id_" + strconv.Itoa(idInt)
 
-	val, err := u.container.RedisDb.Client.Get(u.container.Context, keyForRedis).Result()
-	if err == redis.Nil {
-		logrus.Info("in redis no data about this user. Request to Postrgres")
-
-		newGetUserById := user.NewGetUserByID(u.container.UsersRepository)
-		foundUser, err := newGetUserById.Execute(idInt)
-		if err != nil {
-			logrus.Errorf("can not execute usecase: %s", err)
-			return c.JSON(http.StatusInternalServerError, err)
-		}
-
-		u.container.RedisDb.Client.Set(u.container.Context, keyForRedis, foundUser, 0)
-		_, err = u.container.RedisDb.Client.Expire(u.container.Context, keyForRedis, 1*time.Minute).Result()
-		if err != nil {
-			logrus.Errorf("error while set expirational period")
-		}
-
-		err = c.JSON(http.StatusOK, map[string]interface{}{
-			"user": foundUser,
-		})
-		if err != nil {
-			logrus.Errorf("troubles with sending http status: %s", err)
-		}
-	} else if err != nil {
-		logrus.Errorf("error while attempt to recive data about users rating")
-	} else {
+	userById, err := u.container.RedisDb.Get(c.Request().Context(), keyForRedis).Result()
+	if userById != "" {
 		logrus.Info("data about this user exists in redis")
-		if err := json.Unmarshal([]byte(val), &input); err != nil {
+		if err := json.Unmarshal([]byte(userById), &input); err != nil {
 			logrus.Errorf("failed to bind req body: %s", err)
 			return c.JSON(http.StatusBadRequest, err)
 		}
@@ -192,37 +164,34 @@ func (u *UsersHandler) GetUserById(c echo.Context) error {
 		if err != nil {
 			logrus.Errorf("troubles with sending http status: %s", err)
 		}
+
+		return err
+	}
+
+	logrus.Info("in redis no data about this user. Request to Postrgres")
+
+	newGetUserById := user.NewGetUserByID(u.container.UsersRepository)
+	foundUser, err := newGetUserById.Execute(idInt)
+	if err != nil {
+		logrus.Errorf("can not execute usecase: %s", err)
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	u.container.RedisDb.Set(c.Request().Context(), keyForRedis, foundUser, u.container.Config.ExpTime)
+
+	err = c.JSON(http.StatusOK, map[string]interface{}{
+		"user": foundUser,
+	})
+	if err != nil {
+		logrus.Errorf("troubles with sending http status: %s", err)
 	}
 
 	return err
 }
 
 func (u *UsersHandler) GetNumberOfUsers(c echo.Context) error {
-	usersNumRedis, err := u.container.RedisDb.Client.Get(u.container.Context, "amount_of_users").Result()
-	if err == redis.Nil {
-		logrus.Info("in redis no data about amount of users. Request to Postrgres")
-		newGetUserById := user.NewCountAllUsers(u.container.UsersRepository)
-		numOfUsers, err := newGetUserById.Execute()
-		if err != nil {
-			logrus.Errorf("can not execute usecase: %s", err)
-			return c.JSON(http.StatusInternalServerError, err)
-		}
-
-		err = c.JSON(http.StatusOK, map[string]interface{}{
-			"number_of_users": numOfUsers,
-		})
-		if err != nil {
-			logrus.Errorf("troubles with sending http status: %s", err)
-		}
-
-		u.container.RedisDb.Client.Set(u.container.Context, "amount_of_users", numOfUsers, 0)
-		_, err = u.container.RedisDb.Client.Expire(u.container.Context, "amount_of_users", 1*time.Minute).Result()
-		if err != nil {
-			logrus.Errorf("error while set expirational period")
-		}
-	} else if err != nil {
-		logrus.Errorf("error while attempt to recive data about users rating")
-	} else {
+	usersNumRedis, err := u.container.RedisDb.Get(c.Request().Context(), "amount_of_users").Result()
+	if usersNumRedis != "" {
 		logrus.Info("data about amount of users exists in redis")
 		err = c.JSON(http.StatusOK, map[string]interface{}{
 			"number_of_users": usersNumRedis,
@@ -230,7 +199,26 @@ func (u *UsersHandler) GetNumberOfUsers(c echo.Context) error {
 		if err != nil {
 			logrus.Errorf("troubles with sending http status: %s", err)
 		}
+
+		return err
 	}
+
+	logrus.Info("in redis no data about amount of users. Request to Postrgres")
+	newGetUserById := user.NewCountAllUsers(u.container.UsersRepository)
+	numOfUsers, err := newGetUserById.Execute()
+	if err != nil {
+		logrus.Errorf("can not execute usecase: %s", err)
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	err = c.JSON(http.StatusOK, map[string]interface{}{
+		"number_of_users": numOfUsers,
+	})
+	if err != nil {
+		logrus.Errorf("troubles with sending http status: %s", err)
+	}
+
+	u.container.RedisDb.Set(c.Request().Context(), "amount_of_users", numOfUsers, u.container.Config.ExpTime)
 
 	return err
 }

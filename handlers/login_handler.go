@@ -14,6 +14,6 @@ func NewLoginHandler(container *container.Container) *LoginHandler {
 }
 
 func (l *LoginHandler) SetRoutes(g *echo.Group) {
-	g.GET("/login", l.SignIn)
+	g.POST("/login", l.SignIn)
 
 }

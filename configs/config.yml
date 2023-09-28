@@ -11,3 +11,4 @@ db:
 redis_db:
   host: "localhost"
   port: "6379"
+  exp_time: "60000000000"

@@ -1,8 +1,8 @@
 package container
 
 import (
-	"context"
 	"github.com/jmoiron/sqlx"
+	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 	"userapi/configs"
 	"userapi/redis_db"
@@ -16,8 +16,7 @@ type Container struct {
 	UsersRepository  *repositories.UsersRepository
 	RatingRepository *repositories.RatingRepository
 	VotesRepository  *repositories.VotesRepository
-	RedisDb          *redis_db.RedisDb
-	Context          context.Context
+	RedisDb          *redis.Client
 }
 
 func NewContainer(config configs.Config, logging *logrus.Logger) *Container {
@@ -39,6 +38,5 @@ func NewContainer(config configs.Config, logging *logrus.Logger) *Container {
 		RatingRepository: repositories.NewRatingRepository(db),
 		VotesRepository:  repositories.NewVotesRepository(db),
 		RedisDb:          redisDb,
-		Context:          context.TODO(),
 	}
 }

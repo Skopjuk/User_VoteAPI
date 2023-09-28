@@ -5,11 +5,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type RedisDb struct {
-	Client *redis.Client
-}
-
-func NewRedisDb(addr string) (*RedisDb, error) {
+func NewRedisDb(addr string) (*redis.Client, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: "",
@@ -19,7 +15,5 @@ func NewRedisDb(addr string) (*RedisDb, error) {
 		return nil, err
 	}
 
-	return &RedisDb{
-		Client: client,
-	}, nil
+	return client, nil
 }
