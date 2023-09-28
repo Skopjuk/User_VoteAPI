@@ -23,35 +23,25 @@ func (r *RatingHandler) GetRatingByUserId(c echo.Context) error {
 
 	if ratingRedis != "" {
 		logrus.Info("data about users list exists in redis")
-		err = c.JSON(http.StatusOK, map[string]interface{}{
+		return c.JSON(http.StatusOK, map[string]interface{}{
 			"users_rating": ratingRedis,
 		})
-
-		if err != nil {
-			logrus.Errorf("troubles with sending http status: %s", err)
-		}
-
-		return err
 	}
 	newGetUserRatingById := rating.NewGetUserRating(r.container.RatingRepository)
 	userRating, err := newGetUserRatingById.Execute(idInt)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	err = c.JSON(http.StatusOK, map[string]interface{}{
-		"rating": userRating,
-	})
-
-	if err != nil {
-		logrus.Errorf("troubles with sending http status: %s", err)
-	}
 
 	data, err := json.Marshal(userRating)
 	if err != nil {
 		logrus.Errorf("error while marshaling users list")
+		return err
 	}
 
 	r.container.RedisDb.Set(c.Request().Context(), redisKey, data, r.container.Config.ExpTime)
 
-	return err
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"rating": userRating,
+	})
 }

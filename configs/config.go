@@ -25,7 +25,8 @@ func NewConfig() (Config, error) {
 	viper.AddConfigPath("configs")
 	viper.SetConfigName("config")
 	err := viper.ReadInConfig()
-	expTime, err := strconv.Atoi(viper.GetString("redis_db.exp_time"))
+
+	expTime, err := strconv.Atoi(viper.GetString("redis_db.exp_time_seconds"))
 	if err != nil {
 		logrus.Errorf("error while parsing exp time from config:%s", err)
 	}
@@ -41,6 +42,6 @@ func NewConfig() (Config, error) {
 		SigningKey: viper.GetString("signingKey"),
 		RedisPort:  viper.GetString("redis_db.port"),
 		RedisHost:  viper.GetString("redis_db.host"),
-		ExpTime:    time.Duration(expTime),
+		ExpTime:    time.Duration(expTime) * time.Second,
 	}, err
 }

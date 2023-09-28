@@ -73,13 +73,9 @@ func (v *VotesHandler) GetAllVotes(c echo.Context) error {
 			logrus.Errorf("failed to bind req body: %s", err)
 			return c.JSON(http.StatusBadRequest, err)
 		}
-		err = c.JSON(http.StatusOK, map[string]interface{}{
+		return c.JSON(http.StatusOK, map[string]interface{}{
 			"votes": input,
 		})
-		if err != nil {
-			logrus.Errorf("troubles with sending http status: %s", err)
-		}
-		return err
 	}
 
 	logrus.Info("in redis no data about all votes. Request to Postrgres")

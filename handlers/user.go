@@ -7,7 +7,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
-	"time"
 	"userapi/models"
 	"userapi/usecases/user"
 )
@@ -96,14 +95,10 @@ func (u *UsersHandler) GetAll(c echo.Context) error {
 			logrus.Errorf("failed to bind req body: %s", err)
 			return c.JSON(http.StatusBadRequest, err)
 		}
-		err = c.JSON(http.StatusOK, map[string]interface{}{
+
+		return c.JSON(http.StatusOK, map[string]interface{}{
 			"user": input,
 		})
-		if err != nil {
-			logrus.Errorf("troubles with sending http status: %s", err)
-		}
-
-		return err
 	}
 
 	logrus.Info("in redis no data about all users. Request to Postrgres")
@@ -125,19 +120,14 @@ func (u *UsersHandler) GetAll(c echo.Context) error {
 	data, err := json.Marshal(usersList)
 	if err != nil {
 		logrus.Errorf("error while marshaling users list")
+		return err
 	}
 
 	u.container.RedisDb.Set(c.Request().Context(), "users", data, u.container.Config.ExpTime)
-	_, err = u.container.RedisDb.Expire(c.Request().Context(), "users", 1*time.Minute).Result()
 
-	err = c.JSON(http.StatusOK, map[string]interface{}{
+	return c.JSON(http.StatusOK, map[string]interface{}{
 		"user": users,
 	})
-	if err != nil {
-		logrus.Errorf("troubles with sending http status: %s", err)
-	}
-
-	return err
 }
 
 func (u *UsersHandler) GetUserById(c echo.Context) error {
@@ -158,14 +148,10 @@ func (u *UsersHandler) GetUserById(c echo.Context) error {
 			logrus.Errorf("failed to bind req body: %s", err)
 			return c.JSON(http.StatusBadRequest, err)
 		}
-		err = c.JSON(http.StatusOK, map[string]interface{}{
+
+		return c.JSON(http.StatusOK, map[string]interface{}{
 			"user": input,
 		})
-		if err != nil {
-			logrus.Errorf("troubles with sending http status: %s", err)
-		}
-
-		return err
 	}
 
 	logrus.Info("in redis no data about this user. Request to Postrgres")
@@ -179,28 +165,26 @@ func (u *UsersHandler) GetUserById(c echo.Context) error {
 
 	u.container.RedisDb.Set(c.Request().Context(), keyForRedis, foundUser, u.container.Config.ExpTime)
 
-	err = c.JSON(http.StatusOK, map[string]interface{}{
+	return c.JSON(http.StatusOK, map[string]interface{}{
 		"user": foundUser,
 	})
-	if err != nil {
-		logrus.Errorf("troubles with sending http status: %s", err)
-	}
-
-	return err
 }
 
 func (u *UsersHandler) GetNumberOfUsers(c echo.Context) error {
 	usersNumRedis, err := u.container.RedisDb.Get(c.Request().Context(), "amount_of_users").Result()
+
 	if usersNumRedis != "" {
 		logrus.Info("data about amount of users exists in redis")
-		err = c.JSON(http.StatusOK, map[string]interface{}{
-			"number_of_users": usersNumRedis,
-		})
+
+		usersNumRedisStr, err := strconv.Atoi(usersNumRedis)
 		if err != nil {
-			logrus.Errorf("troubles with sending http status: %s", err)
+			logrus.Errorf("error while converting amount of users to string: %s", err)
+			return err
 		}
 
-		return err
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"number_of_users": usersNumRedisStr,
+		})
 	}
 
 	logrus.Info("in redis no data about amount of users. Request to Postrgres")
@@ -211,16 +195,11 @@ func (u *UsersHandler) GetNumberOfUsers(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 
-	err = c.JSON(http.StatusOK, map[string]interface{}{
-		"number_of_users": numOfUsers,
-	})
-	if err != nil {
-		logrus.Errorf("troubles with sending http status: %s", err)
-	}
-
 	u.container.RedisDb.Set(c.Request().Context(), "amount_of_users", numOfUsers, u.container.Config.ExpTime)
 
-	return err
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"number_of_users": numOfUsers,
+	})
 }
 
 func (a *AccountHandler) ChangePassword(c echo.Context) error {
@@ -257,14 +236,9 @@ func (a *AccountHandler) ChangePassword(c echo.Context) error {
 		logrus.Errorf("can not execute usecase: %s", err)
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	err = c.JSON(http.StatusOK, map[string]interface{}{
+	return c.JSON(http.StatusOK, map[string]interface{}{
 		"status_password_changing": "changed",
 	})
-	if err != nil {
-		logrus.Errorf("troubles with sending http status: %s", err)
-	}
-
-	return err
 }
 
 func (a *AccountHandler) DeleteUser(c echo.Context) error {
@@ -288,14 +262,9 @@ func (a *AccountHandler) DeleteUser(c echo.Context) error {
 		logrus.Errorf("can not execute usecase: %s", err)
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	err = c.JSON(http.StatusOK, map[string]interface{}{
+	return c.JSON(http.StatusOK, map[string]interface{}{
 		"status_deleting_user": "deleted",
 	})
-	if err != nil {
-		logrus.Errorf("troubles with sending http status: %s", err)
-	}
-
-	return err
 }
 
 func getIdFromEndpoint(c echo.Context) (int, error) {
