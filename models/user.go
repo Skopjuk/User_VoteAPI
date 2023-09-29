@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type User struct {
 	Id        int        `db:"id"`
@@ -12,4 +15,13 @@ type User struct {
 	CreatedAt time.Time  `db:"created_at"`
 	UpdatedAt time.Time  `db:"updated_at"`
 	DeletedAt *time.Time `db:"deleted_at"`
+}
+
+func (m User) MarshalBinary() ([]byte, error) {
+	return json.Marshal(m)
+}
+
+func (m User) UnmarshalBinary(toUnmarshal []byte) error {
+	res := User{}
+	return json.Unmarshal(toUnmarshal, &res)
 }

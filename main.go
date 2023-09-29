@@ -19,7 +19,7 @@ func main() {
 	}
 
 	containerInstance := container.NewContainer(config, logging)
-	if err := server.Run(config.Port, *containerInstance); err != nil {
+	if err, errRedis := server.Run(config.Port, config.RedisPort, *containerInstance); err != nil || errRedis != nil {
 		logrus.Fatalf("error occured while running http server: %s, address: %s", err.Error(), config.Port)
 	}
 }
