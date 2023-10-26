@@ -142,6 +142,11 @@ func (u *UsersHandler) GetUserById(c echo.Context) error {
 	keyForRedis := "user_by_id_" + strconv.Itoa(idInt)
 
 	userById, err := u.container.RedisDb.Get(c.Request().Context(), keyForRedis).Result()
+	if err != nil {
+		logrus.Errorf("error while getting data from redis")
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
 	if userById != "" {
 		logrus.Info("data about this user exists in redis")
 		if err := json.Unmarshal([]byte(userById), &input); err != nil {
