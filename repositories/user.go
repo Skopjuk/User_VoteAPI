@@ -15,6 +15,7 @@ func NewUsersRepository(db *sqlx.DB) *UsersRepository {
 }
 
 func (u *UsersRepository) InsertUser(user models.User) (id int, err error) {
+	var idList []int
 	query := "INSERT INTO users (username, password, first_name, last_name, role) values ($1, $2, $3, $4, $5) RETURNING id"
 	row, err := u.db.Query(query, user.Username, user.Password, user.FirstName, user.LastName, user.Role)
 	if err != nil {
@@ -22,11 +23,15 @@ func (u *UsersRepository) InsertUser(user models.User) (id int, err error) {
 		return 0, err
 	}
 
-	if err = row.Scan(&id); err != nil {
-		logrus.Errorf("error while getting id of new user, id")
+	for row.Next() {
+		if err := row.Scan(&id); err != nil {
+			logrus.Errorf("error while scanning row from db: %s", err)
+			return 0, err
+		}
+		idList = append(idList, id)
 	}
 
-	return id, err
+	return idList[0], err
 }
 
 func (u *UsersRepository) FindUserByUsername(username string) (user models.User, err error) {

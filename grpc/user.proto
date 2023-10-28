@@ -82,7 +82,7 @@ message ChangeUsersPasswordRequest {
 }
 
 message CountUsersResponse {
-  int64 numberOfUsers = 1;
+  int32 numberOfUsers = 1;
 }
 
 message DeleteUserRequest {
