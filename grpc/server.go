@@ -204,6 +204,5 @@ func (s Server) DeleteUser(c context.Context, request *DeleteUserRequest) (*empt
 }
 
 func (s Server) mustEmbedUnimplementedUserServiceServer() {
-	//TODO implement me
 	panic("implement me")
 }
