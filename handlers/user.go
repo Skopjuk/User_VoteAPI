@@ -20,11 +20,6 @@ type GetAllUsersParams struct {
 	Role      string `json:"role,omitempty"`
 }
 
-type QueryResult struct {
-	skip  string
-	limit string
-}
-
 type UpdatePasswordParams struct {
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
@@ -89,6 +84,9 @@ func (u *UsersHandler) GetAll(c echo.Context) error {
 	skip := strconv.Itoa((page - 1) * 10)
 
 	val, err := u.container.RedisDb.Get(c.Request().Context(), "users").Result()
+	if err != nil {
+		logrus.Errorf("error while getting data from redis")
+	}
 	if val != "" {
 		logrus.Info("data about users list exists in redis")
 		if err := json.Unmarshal([]byte(val), &input); err != nil {
@@ -177,6 +175,9 @@ func (u *UsersHandler) GetUserById(c echo.Context) error {
 
 func (u *UsersHandler) GetNumberOfUsers(c echo.Context) error {
 	usersNumRedis, err := u.container.RedisDb.Get(c.Request().Context(), "amount_of_users").Result()
+	if err != nil {
+		logrus.Errorf("error while getting data from redis: %s", err)
+	}
 
 	if usersNumRedis != "" {
 		logrus.Info("data about amount of users exists in redis")

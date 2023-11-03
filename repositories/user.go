@@ -38,7 +38,7 @@ func (u *UsersRepository) FindUserByUsername(username string) (user models.User,
 	query := "SELECT * FROM users WHERE username=$1 LIMIT 1"
 	err = u.db.Get(&user, query, username)
 	if err != nil {
-		logrus.Errorf("user %s wasn't found", user)
+		logrus.Errorf("user %s wasn't found", user.Username)
 	}
 
 	return user, err
@@ -59,7 +59,7 @@ func (u *UsersRepository) GetAll(skip string, paginationLimit string) (usersList
 	err = u.db.Select(&usersList, query, paginationLimit, skip)
 
 	if err != nil {
-		logrus.Errorf("users not found %s")
+		logrus.Errorf("users not found")
 	}
 
 	return usersList, err
@@ -69,7 +69,7 @@ func (u *UsersRepository) GetUserById(id int) (user models.User, err error) {
 	query := "SELECT * FROM users WHERE id=$1"
 	err = u.db.Get(&user, query, id)
 	if err != nil {
-		logrus.Errorf("user with id %s wasn't found, with error: %s", id, err)
+		logrus.Errorf("user with id %d wasn't found, with error: %s", id, err)
 	}
 
 	return user, err

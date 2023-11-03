@@ -43,11 +43,6 @@ func (s Server) CreateUser(ctx context.Context, request *CreateUserRequest) (*Cr
 	return &response, nil
 }
 
-func (s Server) FindUserByUsername(context.Context, *FindUserByUsernameRequest) (*FindUserByUsernameResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (s Server) UpdateUser(c context.Context, request *UpdateUserRequest) (*UpdateUserResponse, error) {
 	input := user.UpdateUserAttributes{
 		Username:  request.Username,
@@ -143,13 +138,32 @@ func (s Server) GetUserById(c context.Context, request *GetUserByIdRequest) (*Ge
 }
 
 func (s Server) ChangeUsersPassword(c context.Context, request *ChangeUsersPasswordRequest) (*emptypb.Empty, error) {
-	//TODO implement me
-	panic("implement me")
+	newGetUserById := user.NewGetUserByID(s.Container.UsersRepository)
+	_, err := newGetUserById.Execute(int(request.Id))
+	if err != nil {
+		logrus.Errorf("problem wile inserting user: %s", err)
+		return nil, err
+	}
+
+	params := user.ChangePasswordAttributes{
+		Password: request.Password,
+	}
+
+	newChangePassword := user.NewChangePassword(s.Container.UsersRepository)
+	err = newChangePassword.Execute(int(request.Id), params)
+	if err != nil {
+		logrus.Errorf("can not execute usecase: %s", err)
+		return nil, err
+	}
+	return new(emptypb.Empty), err
 }
 
 func (s Server) CountUsers(c context.Context, empty *emptypb.Empty) (*CountUsersResponse, error) {
 	var responce CountUsersResponse
 	usersNumRedis, err := s.Container.RedisDb.Get(c, "amount_of_users").Result()
+	if err != nil {
+		logrus.Errorf("error while getting data from redis: %s", err)
+	}
 
 	if usersNumRedis != "" {
 		logrus.Info("data about amount of users exists in redis")

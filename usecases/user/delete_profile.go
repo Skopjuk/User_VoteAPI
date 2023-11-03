@@ -2,7 +2,6 @@ package user
 
 type DeleteProfile struct {
 	deleteRepository DeleteUser
-	getUserById      GetUserById
 }
 
 func NewDeleteProfile(deleteRepository DeleteUser) *DeleteProfile {

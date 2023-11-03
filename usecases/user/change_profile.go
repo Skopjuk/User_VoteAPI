@@ -9,8 +9,7 @@ import (
 //позбувитись від бібліотеки errors на користь fmt.Errorf
 
 type ChangeProfile struct {
-	updateUser  UpdateUser
-	getUserById GetUserById
+	updateUser UpdateUser
 }
 
 func NewChangeProfile(updateUser UpdateUser) *ChangeProfile {

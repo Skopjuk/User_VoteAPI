@@ -2,12 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"time"
+	"userapi/container"
 	"userapi/models"
 	"userapi/repositories"
 	"userapi/usecases/rating"
@@ -26,13 +26,6 @@ func (v *VotesHandler) Vote(c echo.Context) error {
 	if err := c.Bind(&input); err != nil {
 		logrus.Errorf("failed to bind req body: %s", err.Error())
 		return c.JSON(http.StatusBadRequest, err.Error())
-	}
-
-	if err := checkForLegitInput(input); err != nil {
-		logrus.Errorf("error: %s", err)
-		return c.JSON(http.StatusBadRequest, map[string]interface{}{
-			"error": fmt.Sprintf("%s", err),
-		})
 	}
 
 	err := v.checkIfUserCanVote(input.UserId, input.RatedUserId, c)
@@ -67,6 +60,10 @@ func (v *VotesHandler) GetAllVotes(c echo.Context) error {
 	newGetVotes := votes.NewGetListOfVotes(v.container.VotesRepository)
 
 	redisVotes, err := v.container.RedisDb.Get(c.Request().Context(), "votes").Result()
+	if err != nil {
+		logrus.Errorf("error while getting data from redis: %s", err)
+	}
+
 	if redisVotes != "" {
 		logrus.Info("data about all votes list exists in redis")
 		if err := json.Unmarshal([]byte(redisVotes), &input); err != nil {
@@ -82,7 +79,7 @@ func (v *VotesHandler) GetAllVotes(c echo.Context) error {
 	votes, err := newGetVotes.Execute()
 	if err != nil {
 		logrus.Errorf("can not execute usecase: %s", err)
-		c.JSON(http.StatusInternalServerError, "")
+		return c.JSON(http.StatusInternalServerError, "")
 	}
 
 	var votesList []models.Votes
@@ -144,12 +141,15 @@ func (v *VotesHandler) DeleteVote(c echo.Context) error {
 	}
 
 	newGetVoteByUsersId := votes.NewGetVoteByUsersId(v.container.VotesRepository)
-	vote, _ := newGetVoteByUsersId.Execute(input.UserId, input.RatedUserId)
+	vote, err := newGetVoteByUsersId.Execute(input.UserId, input.RatedUserId)
+	if err.Error() != fmt.Sprintf("user with id %d already voted for user with id %d", input.UserId, input.RatedUserId) && err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
 
 	newGetUserRating := rating.NewGetUserRating(v.container.RatingRepository)
 	userRating, err := newGetUserRating.Execute(input.RatedUserId)
 	newRating := userRating - vote
-	err = v.updateUsersRating(input.RatedUserId, newRating)
+	err = UpdateUsersRating(input.RatedUserId, newRating, *v.container)
 
 	newDeleteVote := votes.NewDeleteUsersVote(v.container.VotesRepository)
 	err = newDeleteVote.Execute(input.UserId, input.RatedUserId)
@@ -168,18 +168,8 @@ func (v *VotesHandler) DeleteVote(c echo.Context) error {
 	return err
 }
 
-func checkForLegitInput(voteParams VoteParams) error {
-	if voteParams.Vote != 1 && voteParams.Vote != -1 {
-		return errors.New("vote should be 1 or -1")
-	} else if voteParams.UserId == voteParams.RatedUserId {
-		return errors.New("user can not vote for himself")
-	}
-
-	return nil
-}
-
-func (v *VotesHandler) updateUsersRating(userId, userRating int) error {
-	newUpdateRating := rating.NewUpdateUsersRating(v.container.RatingRepository)
+func UpdateUsersRating(userId, userRating int, container container.Container) error {
+	newUpdateRating := rating.NewUpdateUsersRating(container.RatingRepository)
 	err := newUpdateRating.Execute(userRating, userId)
 
 	return err

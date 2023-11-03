@@ -8,10 +8,6 @@ import (
 	"userapi/configs"
 )
 
-const (
-	usersTable = "users"
-)
-
 func NewPostgresDB(cfg configs.Config) (*sqlx.DB, error) {
 
 	db, err := sqlx.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",

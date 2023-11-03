@@ -48,7 +48,8 @@ func main() {
 		}
 
 		s := grpc.NewServer()
-		grpc2.RegisterUserServiceServer(s, grpc2.Server{containerInstance})
+		grpc2.RegisterUserServiceServer(s, grpc2.Server{Container: containerInstance})
+		grpc2.RegisterVoteServiceServer(s, grpc2.ServerVotes{Container: containerInstance})
 		logging.Printf("server listening at %v", lis.Addr())
 		if err := s.Serve(lis); err != nil {
 			logging.Fatalf("failed to serve: %v", err)

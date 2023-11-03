@@ -2,7 +2,6 @@ package user
 
 import (
 	"errors"
-	"fmt"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"userapi/models"
@@ -38,11 +37,8 @@ func (c *CreateProfile) Execute(attributes NewUserAttributes) (id int, err error
 		Role:      attributes.Role,
 		Password:  PasswordHashing(attributes.Password),
 	})
-	if err != nil {
-		fmt.Errorf("can't create user: %w", err)
-	}
-	return id, err
 
+	return id, err
 }
 
 func PasswordHashing(password string) []byte {

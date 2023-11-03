@@ -24,7 +24,6 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
-	FindUserByUsername(ctx context.Context, in *FindUserByUsernameRequest, opts ...grpc.CallOption) (*FindUserByUsernameResponse, error)
 	UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error)
 	GetAll(ctx context.Context, in *GetAllRequest, opts ...grpc.CallOption) (*GetAllResponce, error)
 	GetUserById(ctx context.Context, in *GetUserByIdRequest, opts ...grpc.CallOption) (*GetUserByIdResponce, error)
@@ -44,15 +43,6 @@ func NewUserServiceClient(cc grpc.ClientConnInterface) UserServiceClient {
 func (c *userServiceClient) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error) {
 	out := new(CreateUserResponse)
 	err := c.cc.Invoke(ctx, "/UserService/CreateUser", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userServiceClient) FindUserByUsername(ctx context.Context, in *FindUserByUsernameRequest, opts ...grpc.CallOption) (*FindUserByUsernameResponse, error) {
-	out := new(FindUserByUsernameResponse)
-	err := c.cc.Invoke(ctx, "/UserService/FindUserByUsername", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +108,6 @@ func (c *userServiceClient) DeleteUser(ctx context.Context, in *DeleteUserReques
 // for forward compatibility
 type UserServiceServer interface {
 	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
-	FindUserByUsername(context.Context, *FindUserByUsernameRequest) (*FindUserByUsernameResponse, error)
 	UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
 	GetAll(context.Context, *GetAllRequest) (*GetAllResponce, error)
 	GetUserById(context.Context, *GetUserByIdRequest) (*GetUserByIdResponce, error)
@@ -134,9 +123,6 @@ type UnimplementedUserServiceServer struct {
 
 func (UnimplementedUserServiceServer) CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
-}
-func (UnimplementedUserServiceServer) FindUserByUsername(context.Context, *FindUserByUsernameRequest) (*FindUserByUsernameResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FindUserByUsername not implemented")
 }
 func (UnimplementedUserServiceServer) UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
@@ -183,24 +169,6 @@ func _UserService_CreateUser_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).CreateUser(ctx, req.(*CreateUserRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserService_FindUserByUsername_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FindUserByUsernameRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).FindUserByUsername(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/UserService/FindUserByUsername",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).FindUserByUsername(ctx, req.(*FindUserByUsernameRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -323,10 +291,6 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateUser",
 			Handler:    _UserService_CreateUser_Handler,
-		},
-		{
-			MethodName: "FindUserByUsername",
-			Handler:    _UserService_FindUserByUsername_Handler,
 		},
 		{
 			MethodName: "UpdateUser",

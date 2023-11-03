@@ -25,6 +25,9 @@ func NewConfig() (Config, error) {
 	viper.AddConfigPath("configs")
 	viper.SetConfigName("config")
 	err := viper.ReadInConfig()
+	if err != nil {
+		logrus.Errorf("error while reading from config: %s", err)
+	}
 
 	expTime, err := strconv.Atoi(viper.GetString("redis_db.exp_time_seconds"))
 	if err != nil {
