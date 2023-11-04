@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option go_package = "userapi/grpc";
+
+service Rating {
+  rpc GetRatingByUserId(GetRatingByUserIdRequest) returns (GetRatingByUserIdResponce);
+}
+
+message GetRatingByUserIdRequest {
+  int32 id = 1;
+}
+
+message GetRatingByUserIdResponce {
+  int32 rating = 1;
+}

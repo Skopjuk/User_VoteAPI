@@ -43,9 +43,7 @@ func (s ServerVotes) AddVote(c context.Context, request *AddVoteRequest) (*empty
 }
 
 func (s ServerVotes) ChangeVote(ctx context.Context, request *ChangeVoteRequest) (*emptypb.Empty, error) {
-	var changeRateAttributes votes.ChangeRateAttributes
-
-	changeRateAttributes = votes.ChangeRateAttributes{
+	changeRateAttributes := votes.ChangeRateAttributes{
 		UserId:      int(request.UserId),
 		RatedUserId: int(request.RatedUserId),
 		Vote:        int(request.Vote),
@@ -98,6 +96,9 @@ func (s ServerVotes) DeleteVote(c context.Context, in *DeleteVoteRequest) (*empt
 	userRating, err := newGetUserRating.Execute(int(in.RatedUserId))
 	newRating := userRating - vote
 	err = handlers.UpdateUsersRating(int(in.RatedUserId), newRating, *s.Container)
+	if err != nil {
+		return new(emptypb.Empty), err
+	}
 
 	newDeleteVote := votes.NewDeleteUsersVote(s.Container.VotesRepository)
 	err = newDeleteVote.Execute(int(in.UserId), int(in.RatedUserId))

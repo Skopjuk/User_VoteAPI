@@ -148,6 +148,10 @@ func (v *VotesHandler) DeleteVote(c echo.Context) error {
 
 	newGetUserRating := rating.NewGetUserRating(v.container.RatingRepository)
 	userRating, err := newGetUserRating.Execute(input.RatedUserId)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
 	newRating := userRating - vote
 	err = UpdateUsersRating(input.RatedUserId, newRating, *v.container)
 
@@ -187,6 +191,10 @@ func (v *VotesHandler) checkIfUserCanVote(userId, RatedUserId int, c echo.Contex
 
 	newOneHourCheck := votes.NewFindLastVote(v.container.VotesRepository)
 	updatedAt, err := newOneHourCheck.Execute(userId)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
 	timeDiff := time.Now().Hour() - updatedAt.Hour()
 	if timeDiff < 1 {
 		return c.JSON(http.StatusPreconditionFailed, map[string]interface{}{

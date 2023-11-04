@@ -13,7 +13,7 @@ service UserService {
   rpc ChangeUsersPassword(ChangeUsersPasswordRequest) returns (google.protobuf.Empty);
   rpc CountUsers(google.protobuf.Empty) returns (CountUsersResponse);
   rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty);
-  rpc SignIn (SignInRequest) returns (SignInResponce)
+  rpc SignIn (SignInRequest) returns (SignInResponce);
 }
 
 message User {
@@ -83,7 +83,7 @@ message DeleteUserRequest {
 
 message SignInRequest {
   string username = 1;
-  bytes password = 2;
+  string password = 2;
 }
 
 message SignInResponce {

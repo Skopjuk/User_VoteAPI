@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"strconv"
 	"userapi/container"
+	"userapi/handlers"
 	"userapi/repositories"
 	"userapi/usecases/user"
 )
@@ -215,6 +216,26 @@ func (s Server) DeleteUser(c context.Context, request *DeleteUserRequest) (*empt
 		return new(emptypb.Empty), err
 	}
 	return new(emptypb.Empty), nil
+}
+
+func (s Server) SignIn(c context.Context, in *SignInRequest) (*SignInResponce, error) {
+	logrus.Infof("user %s tries to authenticate", in.Username)
+
+	params := user.AuthenticateAttributes{
+		Username: in.Username,
+		Password: string(in.Password),
+	}
+
+	token, err := handlers.GenerateToken(params.Username, params.Password, *s.Container)
+	if err != nil {
+		return nil, err
+	}
+
+	responce := SignInResponce{
+		Token: token,
+	}
+
+	return &responce, err
 }
 
 func (s Server) mustEmbedUnimplementedUserServiceServer() {
