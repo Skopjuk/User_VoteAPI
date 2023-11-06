@@ -20,6 +20,9 @@ func (r *RatingHandler) GetRatingByUserId(c echo.Context) error {
 	redisKey := "rating_of_user_with_id_" + strconv.Itoa(idInt)
 
 	ratingRedis, err := r.container.RedisDb.Get(c.Request().Context(), redisKey).Result()
+	if err != nil {
+		logrus.Errorf("error while getting data from redis: %s", err)
+	}
 
 	if ratingRedis != "" {
 		logrus.Info("data about users list exists in redis")

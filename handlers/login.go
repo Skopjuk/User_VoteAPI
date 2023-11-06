@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 	"userapi/configs"
+	"userapi/container"
 	"userapi/repositories"
 	"userapi/usecases/user"
 )
@@ -30,7 +31,7 @@ func (l *LoginHandler) SignIn(c echo.Context) error {
 		Password: input.Password,
 	}
 
-	token, err := l.GenerateToken(params.Username, params.Password)
+	token, err := GenerateToken(params.Username, params.Password, *l.container)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
 			"message": "user do not exist",
@@ -50,12 +51,12 @@ func (l *LoginHandler) SignIn(c echo.Context) error {
 	return err
 }
 
-func (l *LoginHandler) GenerateToken(username, password string) (string, error) {
+func GenerateToken(username, password string, c container.Container) (string, error) {
 	params := user.AuthenticateAttributes{
 		Username: username,
 		Password: password,
 	}
-	usersRepository := repositories.NewUsersRepository(l.container.DB)
+	usersRepository := repositories.NewUsersRepository(c.DB)
 	newAuthentication := user.NewAuthenticate(usersRepository)
 	foundUser, err := newAuthentication.Execute(params)
 	if err != nil {

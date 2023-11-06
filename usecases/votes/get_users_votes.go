@@ -13,5 +13,5 @@ func NewGetUserRateById(repository user.GetUsersRate) *GetUserRateById {
 func (g *GetUserRateById) Execute(id int) (rate int, err error) {
 	rate, err = g.repository.GetUsersRate(id)
 
-	return id, err
+	return rate, err
 }

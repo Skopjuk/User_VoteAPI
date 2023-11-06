@@ -15,6 +15,7 @@ func NewUsersRepository(db *sqlx.DB) *UsersRepository {
 }
 
 func (u *UsersRepository) InsertUser(user models.User) (id int, err error) {
+	var idList []int
 	query := "INSERT INTO users (username, password, first_name, last_name, role) values ($1, $2, $3, $4, $5) RETURNING id"
 	row, err := u.db.Query(query, user.Username, user.Password, user.FirstName, user.LastName, user.Role)
 	if err != nil {
@@ -22,18 +23,22 @@ func (u *UsersRepository) InsertUser(user models.User) (id int, err error) {
 		return 0, err
 	}
 
-	if err = row.Scan(&id); err != nil {
-		logrus.Errorf("error while getting id of new user, id")
+	for row.Next() {
+		if err := row.Scan(&id); err != nil {
+			logrus.Errorf("error while scanning row from db: %s", err)
+			return 0, err
+		}
+		idList = append(idList, id)
 	}
 
-	return id, err
+	return idList[0], err
 }
 
 func (u *UsersRepository) FindUserByUsername(username string) (user models.User, err error) {
 	query := "SELECT * FROM users WHERE username=$1 LIMIT 1"
 	err = u.db.Get(&user, query, username)
 	if err != nil {
-		logrus.Errorf("user %s wasn't found", user)
+		logrus.Errorf("user %s wasn't found", user.Username)
 	}
 
 	return user, err
@@ -54,7 +59,7 @@ func (u *UsersRepository) GetAll(skip string, paginationLimit string) (usersList
 	err = u.db.Select(&usersList, query, paginationLimit, skip)
 
 	if err != nil {
-		logrus.Errorf("users not found %s")
+		logrus.Errorf("users not found")
 	}
 
 	return usersList, err
@@ -64,7 +69,7 @@ func (u *UsersRepository) GetUserById(id int) (user models.User, err error) {
 	query := "SELECT * FROM users WHERE id=$1"
 	err = u.db.Get(&user, query, id)
 	if err != nil {
-		logrus.Errorf("user with id %s wasn't found, with error: %s", id, err)
+		logrus.Errorf("user with id %d wasn't found, with error: %s", id, err)
 	}
 
 	return user, err

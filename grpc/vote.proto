@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "userapi/grpc";
+
+service VoteService {
+  rpc AddVote(AddVoteRequest) returns (google.protobuf.Empty);
+  rpc ChangeVote(ChangeVoteRequest) returns (google.protobuf.Empty);
+  rpc GetAllVotes(google.protobuf.Empty) returns (GetAllVotesResponce);
+  rpc DeleteVote (DeleteVoteRequest) returns (google.protobuf.Empty);
+}
+
+message Vote {
+  int32 id = 1;
+  int32 users_id = 2;
+  int32 rated_user_id = 3;
+  int32 vote = 4;
+  google.protobuf.Timestamp updated_at = 5;
+  google.protobuf.Timestamp deleted_at = 6;
+}
+
+message AddVoteRequest {
+  int32 id = 1;
+  int32 rated_user_id = 2;
+  int32 vote = 3;
+}
+
+message  ChangeVoteRequest {
+  int32 user_id = 1;
+  int32 rated_user_id = 2;
+  int32 vote = 3;
+}
+
+message GetAllVotesResponce {
+  repeated Vote vote = 1;
+}
+
+message GetUsersRateRequest {
+  int32 id = 1;
+}
+
+message GetUsersRateResponce {
+  int32 vote = 1;
+}
+
+message DeleteVoteRequest {
+  int32 user_id = 1;
+  int32 rated_user_id = 2;
+}

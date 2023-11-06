@@ -12,12 +12,12 @@ type Server struct {
 	httpServer *http.Server
 }
 
-func Run(port string, redisPort string, containerInstance container.Container) (error, error) {
+func Run(port string, redisPort string, containerInstance container.Container) error {
 	e := echo.New()
 
 	routes(e, containerInstance)
 
-	return e.Start(":" + port), e.Start(":" + redisPort)
+	return e.Start(":" + port)
 }
 
 func routes(e *echo.Echo, container container.Container) {
